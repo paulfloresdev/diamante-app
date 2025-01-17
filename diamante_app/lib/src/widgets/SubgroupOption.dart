@@ -68,7 +68,7 @@ class _SubgroupOptionState extends State<SubgroupOption> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   width: 0.1 * vw,
-                  color: otherHaveSelected ? Colors.grey.shade400 : Theme.of(context).primaryColorLight,
+                  color: otherHaveSelected ? Theme.of(context).shadowColor : Theme.of(context).secondaryHeaderColor,
                 ),
               ),
               child: widget.isFocused
@@ -77,7 +77,7 @@ class _SubgroupOptionState extends State<SubgroupOption> {
                       height: double.maxFinite,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Theme.of(context).primaryColorDark,
+                        color: Theme.of(context).secondaryHeaderColor,
                       ),
                     )
                   : null,
@@ -91,7 +91,7 @@ class _SubgroupOptionState extends State<SubgroupOption> {
               child: Text(
                 widget.subGroup['nombre'],
                 style: TextStyle(
-                  fontSize: 1.2 * vw,
+                  fontSize: 1.3 * vw,
                   color: otherHaveSelected ? Colors.grey.shade400 : Theme.of(context).primaryColor,
                   fontWeight:
                       widget.isFocused ? FontWeight.w600 : FontWeight.w400,

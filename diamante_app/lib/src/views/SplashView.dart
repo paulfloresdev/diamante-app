@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:diamante_app/src/views/OverView.dart';
 import 'package:flutter/material.dart';
 
@@ -35,12 +36,10 @@ class _SplashViewState extends State<SplashView> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            FadeInImage(
-              width: 15 * vw,
-              fadeInDuration: const Duration(milliseconds: 1000),
-              placeholder: const AssetImage('assets/images/logo.png'),
-              image: const AssetImage('assets/images/logo.png'),
-            ),
+            FadeIn(
+              duration: Duration(milliseconds: 2000),
+              child: Image.asset('assets/images/logo.png', width: 25*vw, color: Theme.of(context).secondaryHeaderColor,),
+            )
           ],
         ),
       ),

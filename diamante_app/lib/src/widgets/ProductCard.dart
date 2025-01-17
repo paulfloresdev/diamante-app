@@ -1,5 +1,5 @@
+import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../models/auxiliars/Responsive.dart';
 
@@ -29,7 +29,7 @@ class _ProductCardState extends State<ProductCard> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    super.initState();
     isSelected = widget.product['is_selected'] == 1;
   }
 
@@ -45,7 +45,7 @@ class _ProductCardState extends State<ProductCard> {
         children: [
           GestureDetector(
             onLongPress: widget.onLongPress,
-            onTap: widget.onTap,
+            onTap: isSelected ? null : widget.onTap,
             child: Container(
               width: widget.isOpen ? 69.5 * vw : 73.5 * vw,
               padding: EdgeInsets.all(1.5 * vw),
@@ -54,7 +54,7 @@ class _ProductCardState extends State<ProductCard> {
                 border: Border.all(
                   width: 0.1 * vw,
                   color: isSelected
-                      ? Colors.grey.shade300
+                      ? Theme.of(context).shadowColor
                       : Theme.of(context).primaryColor,
                 ),
               ),
@@ -67,7 +67,7 @@ class _ProductCardState extends State<ProductCard> {
                       fontSize: 1.4 * vw,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? Colors.grey.shade600
+                          ? Theme.of(context).hintColor
                           : Theme.of(context).primaryColor,
                     ),
                   ),
@@ -80,7 +80,7 @@ class _ProductCardState extends State<ProductCard> {
                           fontSize: 1.2 * vw,
                           fontWeight: FontWeight.w400,
                           color: isSelected
-                              ? Colors.grey.shade600
+                              ? Theme.of(context).hintColor
                               : Theme.of(context).primaryColor,
                         ),
                       ),
@@ -96,7 +96,7 @@ class _ProductCardState extends State<ProductCard> {
                         Container(
                           width: 15.5 * vw,
                           color: widget.product['is_selected'] == 1
-                              ? Colors.grey.shade300
+                              ? Theme.of(context).shadowColor
                               : Colors.transparent,
                           padding: EdgeInsets.all(0.75 * vw),
                           child: widget.product['is_selected'] == 1
@@ -105,9 +105,9 @@ class _ProductCardState extends State<ProductCard> {
                                     'Agregado a la Cotización',
                                     style: TextStyle(
                                       fontSize: 1.2 * vw,
-                                      fontWeight: FontWeight.w400,
+                                      fontWeight: FontWeight.w600,
                                       color: isSelected
-                                          ? Colors.grey.shade600
+                                          ? Theme.of(context).splashColor
                                           : Theme.of(context).primaryColor,
                                     ),
                                   ),
@@ -122,13 +122,13 @@ class _ProductCardState extends State<ProductCard> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   Text(
-                                    moneyFormat(
+                                    Formatter.money(
                                         widget.product['precio_unitario']),
                                     style: TextStyle(
                                       fontSize: 1.2 * vw,
                                       fontWeight: FontWeight.w400,
                                       color: isSelected
-                                          ? Colors.grey.shade600
+                                          ? Theme.of(context).hintColor
                                           : Theme.of(context).primaryColor,
                                     ),
                                   ),
@@ -139,7 +139,7 @@ class _ProductCardState extends State<ProductCard> {
                                       fontSize: 1.4 * vw,
                                       fontWeight: FontWeight.w600,
                                       color: isSelected
-                                          ? Colors.grey.shade600
+                                          ? Theme.of(context).hintColor
                                           : Theme.of(context).primaryColor,
                                     ),
                                   ),
@@ -147,12 +147,12 @@ class _ProductCardState extends State<ProductCard> {
                               ),
                               SizedBox(height: 0.75 * vw),
                               Text(
-                                moneyFormat(widget.product['importe_total']),
+                                Formatter.money(widget.product['importe_total']),
                                 style: TextStyle(
                                   fontSize: 1.4 * vw,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
-                                      ? Colors.grey.shade600
+                                      ? Theme.of(context).hintColor
                                       : Theme.of(context).primaryColor,
                                 ),
                               ),
@@ -177,7 +177,7 @@ class _ProductCardState extends State<ProductCard> {
                       shape: BoxShape.circle,
                       border: Border.all(
                         width: 0.1 * vw,
-                        color: Theme.of(context).primaryColorLight,
+                        color: Theme.of(context).secondaryHeaderColor,
                       ),
                     ),
                     child: widget.isPicked
@@ -186,7 +186,7 @@ class _ProductCardState extends State<ProductCard> {
                             height: double.maxFinite,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Theme.of(context).primaryColorDark,
+                              color: Theme.of(context).secondaryHeaderColor,
                             ),
                           )
                         : null,
@@ -198,13 +198,5 @@ class _ProductCardState extends State<ProductCard> {
     );
   }
 
-  String moneyFormat(double amount) {
-    final formatter = NumberFormat.currency(
-      locale: 'en_US', // Usa 'es_MX' si prefieres formato español-mexicano
-      symbol: '\$', // Símbolo de moneda
-      decimalDigits: 2, // Cantidad de decimales
-    );
-
-    return formatter.format(amount);
-  }
+  
 }

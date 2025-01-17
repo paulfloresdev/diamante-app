@@ -8,7 +8,17 @@ class Cell extends StatefulWidget {
   final double? fontSize;
   final FontWeight? fontWeight;
   final MainAxisAlignment? mainAxisAlignment;
-  const Cell({super.key, required this.text, required this.width, this.fontSize, this.fontWeight, this.mainAxisAlignment});
+  final TextAlign? textAlign;
+
+  const Cell({
+    super.key,
+    required this.text,
+    required this.width,
+    this.fontSize,
+    this.fontWeight,
+    this.mainAxisAlignment,
+    this.textAlign,
+  });
 
   @override
   State<Cell> createState() => _CellState();
@@ -19,23 +29,28 @@ class _CellState extends State<Cell> {
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
     double vw = responsive.viewportWidth;
-    
+
     return Container(
       width: widget.width,
-
+      padding: EdgeInsets.symmetric(horizontal: 1 * vw, vertical: 1*vw),
       child: Row(
         mainAxisAlignment: widget.mainAxisAlignment ?? MainAxisAlignment.center,
         children: [
-          Text(
-            widget.text, 
-            style: TextStyle(
-              fontSize: widget.fontSize ?? 1.2*vw,
-              fontWeight: widget.fontWeight ?? FontWeight.w400,
+          Flexible(
+            child: Text(
+              widget.text,
+              textAlign: widget.textAlign ?? TextAlign.center,
+              style: TextStyle(
+                fontSize: widget.fontSize ?? 1.3 * vw,
+                fontWeight: widget.fontWeight ?? FontWeight.w400,
+                color: Theme.of(context).primaryColor
+              ),
+              softWrap: true, // Permite que el texto se ajuste en otro renglón
+              overflow: TextOverflow.visible, // Controla el desbordamiento del texto
             ),
           ),
         ],
       ),
-      
     );
   }
 }

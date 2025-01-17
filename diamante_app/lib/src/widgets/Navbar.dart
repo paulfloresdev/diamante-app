@@ -195,7 +195,7 @@ class _NavbarState extends State<Navbar> {
                     }
                     var groups = snapshot.data;
                     if(groups!.isEmpty){
-                      return Center(child: Text('No se encontraron grupos.'));
+                      return Center(child: Text(''));
                     }
         
                     return ListView.builder(
@@ -250,7 +250,7 @@ class _NavbarState extends State<Navbar> {
         Container(
           width: 95*vw,
           height: 0.1*vw,
-          color: Colors.grey.shade400,
+          color: Theme.of(context).shadowColor,
         ),
         SizedBox(height: 1.5*vw),
       ],

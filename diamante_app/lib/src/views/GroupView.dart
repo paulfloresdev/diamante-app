@@ -1,3 +1,4 @@
+import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/widgets/Buttons/BoxButton.dart';
 import 'package:diamante_app/src/widgets/CustomScaffold.dart';
@@ -29,7 +30,7 @@ class _GroupViewState extends State<GroupView> {
   final TextEditingController _precioUnitarioController =
       TextEditingController();
   late Future<List<Map<String, dynamic>>> _futureSubGroups;
-  late Future<List<Map<String, dynamic>>> _futureProducts;
+  late Future<Map<String, dynamic>> _futureProducts;
   final List<int> pickedItems = [];
   bool isOpen = false;
 
@@ -337,6 +338,7 @@ class _GroupViewState extends State<GroupView> {
                                         controller: _cantidadController,
                                         hint: 'Cantidad',
                                         keyboardType: TextInputType.number,
+                                        pattern: RegExp(r'[0-9]'),
                                       ),
                                     ],
                                   ),
@@ -359,6 +361,7 @@ class _GroupViewState extends State<GroupView> {
                                         controller: _precioUnitarioController,
                                         hint: 'Precio unitario',
                                         keyboardType: TextInputType.number,
+                                        pattern: RegExp(r'[0-9.]'),
                                       ),
                                     ],
                                   ),
@@ -516,6 +519,7 @@ class _GroupViewState extends State<GroupView> {
                                         controller: _cantidadEditController,
                                         hint: 'Cantidad',
                                         keyboardType: TextInputType.number,
+                                        pattern: RegExp(r'[0-9]'),
                                       ),
                                     ],
                                   ),
@@ -539,6 +543,7 @@ class _GroupViewState extends State<GroupView> {
                                             _precioUnitarioEditController,
                                         hint: 'Precio unitario',
                                         keyboardType: TextInputType.number,
+                                        pattern: RegExp(r'[0-9.]'),
                                       ),
                                     ],
                                   ),
@@ -639,6 +644,7 @@ class _GroupViewState extends State<GroupView> {
                               style: TextStyle(
                                 fontSize: 1.6 * vw,
                                 fontWeight: FontWeight.w600,
+                                color: Theme.of(context).primaryColor
                               ),
                             ),
                             GestureDetector(
@@ -724,16 +730,17 @@ class _GroupViewState extends State<GroupView> {
                         decoration: BoxDecoration(
                       border: Border(
                           left: BorderSide(
-                              width: 0.1 * vw, color: Colors.grey.shade500))),
-                        child: FutureBuilder<List<Map<String, dynamic>>>(
+                              width: 0.1 * vw, color: Theme.of(context).shadowColor))),
+                        child: FutureBuilder<Map<String, dynamic>>(
                           future: _futureProducts,
                           builder: (context,
-                              AsyncSnapshot<List<Map<String, dynamic>>>
+                              AsyncSnapshot<Map<String, dynamic>>
                                   snapshot) {
                             if (!snapshot.hasData) {
                               return SizedBox();
                             }
-                            var products = snapshot.data!;
+                            var data = snapshot.data!;
+                            var products = data['productos'];
                             return Column(
                               children: [
                                 Container(
@@ -741,13 +748,42 @@ class _GroupViewState extends State<GroupView> {
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'PRODUCTOS',
-                                        style: TextStyle(
-                                          fontSize: 1.6 * vw,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'PRODUCTOS',
+                                            style: TextStyle(
+                                              fontSize: 1.6 * vw,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context).primaryColor
+                                            ),
+                                          ),
+                                          SizedBox(height: 0.25*vw),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                'Total:',
+                                                style: TextStyle(
+                                                  fontSize: 1.6 * vw,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Theme.of(context).primaryColor
+                                                ),
+                                              ),
+                                              SizedBox(width: 0.5*vw),
+                                              Text(
+                                                Formatter.money(data['total_importe']),
+                                                style: TextStyle(
+                                                  fontSize: 1.6 * vw,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Theme.of(context).primaryColor
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        ],
                                       ),
                                       Row(
                                         children: [

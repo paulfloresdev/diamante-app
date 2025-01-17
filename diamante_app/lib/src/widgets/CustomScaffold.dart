@@ -1,5 +1,7 @@
 import 'package:diamante_app/src/database/DatabaseFiles.dart';
 import 'package:diamante_app/src/database/DatabaseService.dart';
+import 'package:diamante_app/src/models/auxiliars/Router.dart';
+import 'package:diamante_app/src/views/ConfigsView.dart';
 import 'package:diamante_app/src/widgets/NavBar.dart';
 import 'package:flutter/material.dart';
 
@@ -34,7 +36,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
             children: [
               Image.asset(
                 'assets/images/logo.png',
-                color: Theme.of(context).primaryColorDark,
+                color: Theme.of(context).secondaryHeaderColor,
                 width: 7.5 * vw
               ),
               SizedBox(width: 1.25 * vw),
@@ -51,6 +53,19 @@ class _CustomscaffoldState extends State<Customscaffold> {
                   print(data.toString());
                 },
                 icon: Icons.arrow_downward_rounded,
+              ),
+              SizedBox(width: 0.25 * vw),
+              CircularButton(
+                onPressed: () async {
+                  Map<String, dynamic>? data = await DatabaseService.instance.getConfigById(1);
+
+                  if(data != {}){
+                    Routes(context).goTo(
+                      ConfigsView(nombreCliente: data!['nombre_cliente'], moneda: data!['moneda'], ivaPorcentaje: data!['iva_porcentaje'], nombreEmpresa: data!['nombre_empresa'], domicilio: data!['domicilio'], cp: data!['cp'], telefono: data!['telefono'])
+                    );
+                  }
+                },
+                icon: Icons.mode_edit_outlined,
               ),
             ],
           ),

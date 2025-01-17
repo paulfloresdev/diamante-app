@@ -32,8 +32,8 @@ class _BoxButtonState extends State<BoxButton> {
         padding: EdgeInsets.all(1*vw),
         margin: widget.margin,
         decoration: BoxDecoration(
-          border: Border.all(width: 0.1*vw, color: Theme.of(context).primaryColor),
-          color: widget.isFocused ? Theme.of(context).primaryColor : Theme.of(context).splashColor
+          border: Border.all(width: 0.1*vw, color: widget.isFocused ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8) : Theme.of(context).primaryColor),
+          color: widget.isFocused ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8) : Theme.of(context).splashColor
         ),
         child: Center(
           child: Text(

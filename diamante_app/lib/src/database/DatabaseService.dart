@@ -28,7 +28,7 @@ class DatabaseService {
 
   Future<void> _createDB(Database db, int version) async {
     // Crear tabla de Grupos
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE grupos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL
@@ -36,7 +36,7 @@ class DatabaseService {
     ''');
 
     // Crear tabla de Subgrupos
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE subgrupos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
@@ -46,7 +46,7 @@ class DatabaseService {
     ''');
 
     // Crear tabla de Productos
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE productos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         concepto TEXT NOT NULL,
@@ -59,64 +59,145 @@ class DatabaseService {
         FOREIGN KEY (subgrupo_id) REFERENCES subgrupos (id) ON DELETE CASCADE
       )
     ''');
+
+    // Crear tabla de Configs
+    await db.execute(''' 
+      CREATE TABLE configs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre_cliente TEXT NOT NULL,
+        moneda TEXT NOT NULL CHECK(moneda IN ('MXN', 'USD')),
+        tipo_cambio REAL NOT NULL,
+        iva_porcentaje REAL NOT NULL,
+        aplicar_iva BOOLEAN NOT NULL,
+        nombre_empresa TEXT,
+        domicilio TEXT,            -- Nuevo campo domicilio
+        cp TEXT,                   -- Nuevo campo código postal
+        telefono TEXT              -- Nuevo campo teléfono
+      )
+    ''');
+
+
+    // Insertar un registro predeterminado en la tabla de Configs
+    await db.insert('configs', {
+      'nombre_cliente': 'Cliente Predeterminado',
+      'moneda': 'MXN',
+      'tipo_cambio': 20.0, // Tipo de cambio predeterminado
+      'iva_porcentaje': 16.0, // IVA predeterminado
+      'aplicar_iva': true,
+      'nombre_empresa': 'Diamante Cabo San Lucas, S. de R.L. de C.V.',
+      'domicilio': 'Cabo San Lucas, Baja California Sur, México.',  // Valor para domicilio
+      'cp': '12345',                    // Valor para código postal
+      'telefono': '1234567890',          // Valor para teléfono
+    });
+
   }
 
-  Future<List<Map<String, dynamic>>> getFullSelection() async {
-  final db = await instance.database;
+  Future<Map<String, dynamic>?> getConfigById(int id) async {
+    final db = await instance.database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'configs',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
 
-  // Consulta SQL para obtener los grupos y sus productos seleccionados
-  final result = await db.rawQuery('''
-    SELECT 
-      g.id AS grupo_id,
-      g.nombre AS grupo_nombre,
-      p.id AS producto_id,
-      p.concepto AS producto_concepto,
-      p.tipo_unidad AS producto_tipo_unidad,
-      p.precio_unitario AS producto_precio_unitario,
-      p.cantidad AS producto_cantidad,
-      p.importe_total AS producto_importe_total,
-      p.is_selected AS producto_is_selected,
-      s.id AS subgrupo_id,
-      s.nombre AS subgrupo_nombre
-    FROM productos p
-    INNER JOIN subgrupos s ON p.subgrupo_id = s.id
-    INNER JOIN grupos g ON s.grupo_id = g.id
-    WHERE p.is_selected = 1
-    ORDER BY g.id, s.id, p.id
-  ''');
+  Future<void> updateConfig(
+    int id, {
+    required String nombreCliente,
+    required String moneda,
+    required double porcentajeIVA,
+    required String nombreEmpresa,
+    required String domicilio,
+    required String cp,
+    required String telefono,
+  }) async {
+    final db = await instance.database;
+    await db.update(
+      'configs',
+      {
+        'nombre_cliente': nombreCliente,
+        'moneda': moneda,
+        'iva_porcentaje': porcentajeIVA,
+        'nombre_empresa': nombreEmpresa,
+        'domicilio': domicilio,
+        'cp': cp,
+        'telefono': telefono,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 
-  // Procesar los datos para estructurarlos en un mapa por grupo
-  Map<int, Map<String, dynamic>> groups = {};
 
-  for (var row in result) {
-    int grupoId = row['grupo_id'] as int;
 
-    // Si el grupo no está en el mapa, se inicializa
-    if (!groups.containsKey(grupoId)) {
-      groups[grupoId] = {
-        'grupo_id': grupoId,
-        'grupo_nombre': row['grupo_nombre'],
-        'productos': []
-      };
+  Future<Map<String, dynamic>> getFullSelection() async {
+    final db = await instance.database;
+
+    // Consulta SQL para obtener los grupos y sus productos seleccionados
+    final result = await db.rawQuery('''
+      SELECT 
+        g.id AS grupo_id,
+        g.nombre AS grupo_nombre,
+        p.id AS producto_id,
+        p.concepto AS producto_concepto,
+        p.tipo_unidad AS producto_tipo_unidad,
+        p.precio_unitario AS producto_precio_unitario,
+        p.cantidad AS producto_cantidad,
+        p.importe_total AS producto_importe_total,
+        p.is_selected AS producto_is_selected,
+        s.id AS subgrupo_id,
+        s.nombre AS subgrupo_nombre
+      FROM productos p
+      INNER JOIN subgrupos s ON p.subgrupo_id = s.id
+      INNER JOIN grupos g ON s.grupo_id = g.id
+      WHERE p.is_selected = 1
+      ORDER BY g.id, s.id, p.id
+    ''');
+
+    // Procesar los datos para estructurarlos en un mapa por grupo
+    Map<int, Map<String, dynamic>> groups = {};
+    double totalSum = 0.0; // Sumatoria general de todos los grupos
+
+    for (var row in result) {
+      int grupoId = row['grupo_id'] as int;
+      double importeTotal = row['producto_importe_total'] as double;
+
+      // Si el grupo no está en el mapa, se inicializa
+      if (!groups.containsKey(grupoId)) {
+        groups[grupoId] = {
+          'grupo_id': grupoId,
+          'grupo_nombre': row['grupo_nombre'],
+          'productos': [],
+          'sumatoria': 0.0, // Inicializar la sumatoria del grupo
+        };
+      }
+
+      // Agregar el producto al grupo correspondiente
+      groups[grupoId]!['productos'].add({
+        'producto_id': row['producto_id'],
+        'concepto': row['producto_concepto'],
+        'tipo_unidad': row['producto_tipo_unidad'],
+        'precio_unitario': row['producto_precio_unitario'],
+        'cantidad': row['producto_cantidad'],
+        'importe_total': importeTotal,
+        'is_selected': row['producto_is_selected'],
+        'subgrupo_id': row['subgrupo_id'],
+        'subgrupo_nombre': row['subgrupo_nombre'],
+      });
+
+      // Sumar el importe_total al grupo y a la sumatoria general
+      groups[grupoId]!['sumatoria'] += importeTotal;
+      totalSum += importeTotal;
     }
 
-    // Agregar el producto al grupo correspondiente
-    groups[grupoId]!['productos'].add({
-      'producto_id': row['producto_id'],
-      'concepto': row['producto_concepto'],
-      'tipo_unidad': row['producto_tipo_unidad'],
-      'precio_unitario': row['producto_precio_unitario'],
-      'cantidad': row['producto_cantidad'],
-      'importe_total': row['producto_importe_total'],
-      'is_selected': row['producto_is_selected'],
-      'subgrupo_id': row['subgrupo_id'],
-      'subgrupo_nombre': row['subgrupo_nombre'],
-    });
+    // Devolver los grupos con sus productos y sumatorias, junto con la sumatoria general
+    return {
+      'grupos': groups.values.toList(),
+      'totalSum': totalSum,
+    };
   }
 
-  // Devolver la lista de grupos con sus productos seleccionados
-  return groups.values.toList();
-}
 
 
   Future<String> printDatabasePath() async {
@@ -296,12 +377,29 @@ Future<bool> otherSubgroupsHaveSelectedProducts(int excludedSubgrupoId, int grup
     );
   }
 
-  Future<List<Map<String, dynamic>>> getProductosBySubgrupo(
-      int subgrupoId) async {
+  Future<Map<String, dynamic>> getProductosBySubgrupo(int subgrupoId) async {
     final db = await instance.database;
-    return await db
-        .query('productos', where: 'subgrupo_id = ?', whereArgs: [subgrupoId]);
+
+    // Obtener los productos del subgrupo
+    final productos = await db.query(
+      'productos',
+      where: 'subgrupo_id = ?',
+      whereArgs: [subgrupoId],
+    );
+
+    // Calcular la sumatoria de importe_total
+    double totalImporte = 0.0;
+    for (var producto in productos) {
+      totalImporte += (producto['importe_total'] as num).toDouble();
+    }
+
+    // Devolver tanto los productos como el total
+    return {
+      'productos': productos,
+      'total_importe': totalImporte,
+    };
   }
+
 
   Future<int> updateProductoSeleccion(int id, bool isSelected) async {
     final db = await instance.database;

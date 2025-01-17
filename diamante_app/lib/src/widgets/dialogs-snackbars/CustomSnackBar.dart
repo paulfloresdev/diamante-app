@@ -18,7 +18,7 @@ class CustomSnackBar {
           color: Theme.of(context).primaryColor,
         ),
       ),
-      backgroundColor: Colors.grey.shade300,
+      backgroundColor: Theme.of(context).shadowColor,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);

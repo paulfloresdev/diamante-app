@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/auxiliars/Responsive.dart';
 
 class Input extends StatefulWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType? keyboardType;
+  final Pattern? pattern;
   const Input(
       {super.key,
       required this.controller,
       required this.hint,
-      this.keyboardType});
+      this.keyboardType,
+      this.pattern,});
 
   @override
   State<Input> createState() => _InputState();
@@ -24,6 +27,9 @@ class _InputState extends State<Input> {
     return SizedBox(
       height: 4 * vw,
       child: TextField(
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(widget.pattern ?? RegExp(r'.*'))
+        ],
         controller: widget.controller,
         keyboardType: widget.keyboardType,
         decoration: InputDecoration(
