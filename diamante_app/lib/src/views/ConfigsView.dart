@@ -1,5 +1,8 @@
+import 'package:diamante_app/src/database/DatabaseService.dart';
+import 'package:diamante_app/src/widgets/Buttons/BoxButton.dart';
 import 'package:diamante_app/src/widgets/CustomScaffold.dart';
 import 'package:diamante_app/src/widgets/Input.dart';
+import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 
 import '../models/auxiliars/Responsive.dart';
@@ -152,7 +155,12 @@ class _ConfigsViewState extends State<ConfigsView> {
                               ),
                             ),
                             SizedBox(height: 0.5 * vw),
-                            Input(controller: cpController, hint: 'C.P.'),
+                            Input(
+                              controller: cpController, 
+                              hint: 'C.P.',
+                              keyboardType: TextInputType.number,
+                              pattern: RegExp(r'[0-9]'),
+                            ),
                           ],
                         ),
                       ),
@@ -169,7 +177,12 @@ class _ConfigsViewState extends State<ConfigsView> {
                               ),
                             ),
                             SizedBox(height: 0.5 * vw),
-                            Input(controller: telefonoController, hint: 'Teléfono'),
+                            Input(
+                              controller: telefonoController, 
+                              hint: 'Teléfono',
+                              keyboardType: TextInputType.number,
+                              pattern: RegExp(r'[0-9]'),
+                            ),
                           ],
                         ),
                       ),
@@ -199,7 +212,13 @@ class _ConfigsViewState extends State<ConfigsView> {
                               ),
                             ),
                             SizedBox(height: 0.5 * vw),
-                            Input(controller: ivaPorcentajeController, hint: 'IVA'),
+                            Input(
+                              controller: ivaPorcentajeController, 
+                              hint: 'IVA',
+                              keyboardType: TextInputType.number,
+                              pattern: RegExp(r'[0-9.]'),
+                            ),
+                            
                           ],
                         ),
                       ),
@@ -264,7 +283,48 @@ class _ConfigsViewState extends State<ConfigsView> {
                 ),
               ],
             ),
+            SizedBox(height: 1.5*vw),
+            InkWell(
+              onTap: () async {
+                print(nombreClienteController.text);
+                print(nombreEmpresaController.text);
+                print(domicilioController.text);
+                print(cpController.text);
+                print(telefonoController.text);
+                print(ivaPorcentajeController.text);
+                print(monedaController.text);
 
+                if(cpController.text.length > 4){
+                  if(telefonoController.text.length > 9){
+                    if(nombreEmpresaController.text.isNotEmpty && nombreClienteController.text.isNotEmpty && domicilioController.text.isNotEmpty && ivaPorcentajeController.text.isNotEmpty){
+                      await DatabaseService.instance.updateConfig(1, nombreCliente: nombreClienteController.text, moneda: monedaController.text, porcentajeIVA: double.parse(ivaPorcentajeController.text), nombreEmpresa: nombreEmpresaController.text, domicilio: domicilioController.text, cp: cpController.text, telefono: telefonoController.text);
+                      CustomSnackBar(context: context).show('Configuraciones actualizadas correctamente.');
+                    }else{
+                      CustomSnackBar(context: context).show('Se encontraron campos vacíos.');
+                    }
+                  }else{
+                    CustomSnackBar(context: context).show('El teléfono debe tener mímino 10 dígitos.');
+                  }
+                }else{
+                  CustomSnackBar(context: context).show('El código postal debe tener mímino 5 dígitos.');
+                }
+              },
+              child: Container(
+                width: 95*vw,
+                height: 5*vw,
+                color: Theme.of(context).primaryColor,
+                child: Center(
+                  child: Text(
+                    'Guardar',
+                    style: TextStyle(
+                      fontSize: 1.2*vw,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).splashColor,
+                    ),
+                  ),
+                ),
+              ),
+            )
             
           ],
         ),

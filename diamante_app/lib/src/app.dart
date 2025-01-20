@@ -1,4 +1,5 @@
 
+import 'package:diamante_app/src/models/pdf/PdfGenerator.dart';
 import 'package:flutter/material.dart';
 import 'views/SplashView.dart';
 
@@ -18,6 +19,6 @@ class MainApp extends StatelessWidget {
           shadowColor: Color.fromRGBO(200, 200, 215, 1),
           hintColor: Color.fromRGBO(160, 160, 175, 1),
         ),
-        home: const SplashView());
+        home: SplashView());
   }
 }

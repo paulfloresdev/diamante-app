@@ -1,3 +1,4 @@
+
 import 'package:diamante_app/src/database/DatabaseService.dart';
 import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:diamante_app/src/models/auxiliars/Responsive.dart';
@@ -53,6 +54,9 @@ class _OverViewState extends State<OverView> {
         )) ??
         false; // Devuelve false si el valor retornado es nulo
   }
+
+  
+
 
   @override
   Widget build(BuildContext context) {

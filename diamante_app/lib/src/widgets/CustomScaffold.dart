@@ -1,6 +1,7 @@
 import 'package:diamante_app/src/database/DatabaseFiles.dart';
 import 'package:diamante_app/src/database/DatabaseService.dart';
 import 'package:diamante_app/src/models/auxiliars/Router.dart';
+import 'package:diamante_app/src/models/pdf/PdfGenerator.dart';
 import 'package:diamante_app/src/views/ConfigsView.dart';
 import 'package:diamante_app/src/widgets/NavBar.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,9 @@ class Customscaffold extends StatefulWidget {
 }
 
 class _CustomscaffoldState extends State<Customscaffold> {
+
+
+
   @override
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
@@ -66,6 +70,90 @@ class _CustomscaffoldState extends State<Customscaffold> {
                   }
                 },
                 icon: Icons.mode_edit_outlined,
+              ),
+              SizedBox(width: 0.25 * vw),
+              CircularButton(
+                onPressed:() async {
+                  var configData = await DatabaseService.instance.getConfigById(1);
+                  var contentData = await DatabaseService.instance.getFullSelection();
+                  var groups = contentData['grupos'];
+                  var subtotal = contentData['totalSum'];
+                  var iva = configData!['iva_porcentaje']/100;
+                  var ivaValor = subtotal*iva;
+                  var total = subtotal + ivaValor; 
+
+                  List<Map<String, dynamic>> contentTable = [{'type': 'header'}];
+
+                  for(int i = 0; i < groups.length; i++){
+                    contentTable.add({
+                      'type': 'titles',
+                    });
+                    List<dynamic> products = groups[i]['productos'];
+                    for(int j = 0; j < products.length; j++){
+                      contentTable.add({
+                        'type': 'content',
+                        'concepto' : products[j]['concepto'],
+                        'tipo_unidad' : products[j]['tipo_unidad'],
+                        'precio_unitario' : products[j]['precio_unitario'],
+                        'cantidad' : products[j]['cantidad'],
+                        'importe_total' : products[j]['importe_total'],
+                      });
+                    }
+                    contentTable.add({
+                      'type': 'group',
+                      'nombre':groups[i]['grupo_nombre'],
+                      'sumatoria': groups[i]['sumatoria'],
+                    });
+                  }
+
+                  contentTable.add(
+                    {
+                      'type': 'subtotal',
+                      'value': subtotal,
+                    }
+                  );
+                  contentTable.add(
+                    {
+                      'type': 'iva',
+                      'value': iva*100,
+                    }
+                  );
+                  contentTable.add(
+                    {
+                      'type': 'iva_valor',
+                      'value': ivaValor,
+                    }
+                  );
+                  contentTable.add(
+                    {
+                      'type': 'total',
+                      'value': total,
+                    }
+                  );
+                  contentTable.add(
+                    {
+                      'type': 'signature',
+                    }
+                  );
+
+                  var chunks = [];
+                  int chunkSize = 10;
+                  for (var i = 0; i < contentTable.length; i += chunkSize) {
+                    chunks.add(contentTable.sublist(i, i+chunkSize > contentTable.length ? contentTable.length : i + chunkSize)); 
+                  }
+                  
+                  print('Cantidad de chunks: ${chunks.length}');
+                  for(int i = 0; i < chunks.length; i++){
+                    print('Chunk ${i+1}: ${chunks[i].length} items');
+                  }
+
+                  Routes(context).goTo(PdfWithSignature(
+                    configData: configData,
+                    contentTable: contentTable,
+                    chunks: chunks,
+                  ));
+                }, 
+                icon: Icons.upload_file
               ),
             ],
           ),
