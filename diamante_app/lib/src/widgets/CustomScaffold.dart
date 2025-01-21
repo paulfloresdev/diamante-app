@@ -69,10 +69,10 @@ class _CustomscaffoldState extends State<Customscaffold> {
                           telefono: data!['telefono']));
                     }
                   },
-                  icon: Icons.mode_edit_outlined,
+                  icon: Icons.settings_outlined,
                 ),
                 SizedBox(width: 0.25 * vw),
-                CircularButton(
+                /*CircularButton(
                     onPressed: () async {
                       var configData =
                           await DatabaseService.instance.getConfigById(1);
@@ -150,7 +150,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
                         chunks: chunks,
                       ));
                     },
-                    icon: Icons.upload_file),
+                    icon: Icons.upload_file),*/
               ],
             ),
           ),

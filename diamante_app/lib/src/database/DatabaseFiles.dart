@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:diamante_app/src/database/DatabaseService.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,14 @@ class DatabaseFiles {
       openAppSettings();
     }
   }
+
+  /*Future<List<int>> deleteSelection() async{
+    List<int> productIds = [];
+
+    await DatabaseService.instance.
+
+    return productIds;
+  }*/
 
   Future<void> exportDatabase() async {
     // Solicitar permisos de almacenamiento antes de exportar

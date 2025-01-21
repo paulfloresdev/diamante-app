@@ -8,6 +8,8 @@ import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../models/auxiliars/Router.dart';
+import '../models/pdf/PdfGenerator.dart';
 import '../widgets/dialogs-snackbars/ConfirmDialog.dart';
 
 class OverView extends StatefulWidget {
@@ -327,7 +329,22 @@ class _OverViewState extends State<OverView> {
                                   width: 95 * vw,
                                   child: Column(
                                     children: [
-                                      
+                                      Container(
+                                        width: 95 * vw,
+                                        decoration: BoxDecoration(
+                                          color: Color.fromRGBO(225, 225, 240, 1),
+                                          border: Border(
+                                            bottom: BorderSide(width: 0.1*vw, color: Theme.of(context).hintColor)
+                                          )
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Cell(text: group['grupo_nombre'], width: 42.5*vw, fontSize: 1.4*vw, fontWeight: FontWeight.w600, mainAxisAlignment: MainAxisAlignment.start),
+                                            Cell(text: Formatter.money(group['sumatoria']), width: 12.5 * vw, fontSize: 1.4*vw, fontWeight: FontWeight.w600,),
+                                          ],
+                                        ),
+                                      ),
                                       isOpen ? Container(
                                         width: 95 * vw,
                                         decoration: BoxDecoration(
@@ -393,22 +410,7 @@ class _OverViewState extends State<OverView> {
                           
                                         ),
                                       ) : SizedBox(),
-                                      Container(
-                                        width: 95 * vw,
-                                        decoration: BoxDecoration(
-                                          color: Color.fromRGBO(225, 225, 240, 1),
-                                          border: Border(
-                                            bottom: BorderSide(width: 0.1*vw, color: Theme.of(context).hintColor)
-                                          )
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Cell(text: group['grupo_nombre'], width: 42.5*vw, fontSize: 1.4*vw, fontWeight: FontWeight.w600, mainAxisAlignment: MainAxisAlignment.start),
-                                            Cell(text: Formatter.money(group['sumatoria']), width: 12.5 * vw, fontSize: 1.4*vw, fontWeight: FontWeight.w600,),
-                                          ],
-                                        ),
-                                      ),
+                                      
                                     ],
                                   ),
                                 );
@@ -524,7 +526,129 @@ class _OverViewState extends State<OverView> {
                                     )
                                   ],
                                 ),
-                                SizedBox(height: 0.5*vw),
+                                SizedBox(height: 2.5*vw),
+                                InkWell(
+                                  onTap: () async {
+                                    var configData =
+                                        await DatabaseService.instance.getConfigById(1);
+                                    var contentData =
+                                        await DatabaseService.instance.getFullSelection();
+                                    var groups = contentData['grupos'];
+                                    var subtotal = contentData['totalSum'];
+                                    var iva = configData!['iva_porcentaje'] / 100;
+                                    var ivaValor = subtotal * iva;
+                                    var total = subtotal + ivaValor;
+
+                                    List<Map<String, dynamic>> contentTable = [];
+
+                                    //  RESUMEN
+                                    contentTable.add(
+                                      {
+                                        'type': 'header',
+                                        'label': 'RESUMEN DE LA COTIZACIÓN'
+                                      }
+                                    );
+
+                                    for (int i = 0; i < groups.length; i++) {
+                                      contentTable.add({
+                                        'type': 'group',
+                                        'subtype' : 'resumen',
+                                        'nombre': groups[i]['grupo_nombre'],
+                                        'sumatoria': groups[i]['sumatoria'],
+                                      });
+                                    }
+
+                                    contentTable.add({
+                                      'type': 'subtotal',
+                                      'label': 'Subtotal:',
+                                      'value': subtotal,
+                                    });
+                                    contentTable.add({
+                                      'type': 'iva',
+                                      'label': 'IVA (${iva * 100}%):',
+                                      'value': ivaValor,
+                                    });
+                                    contentTable.add({
+                                      'type': 'total',
+                                      'label': 'Total:',
+                                      'value': total,
+                                    });
+
+                                    contentTable.add({
+                                      'type' : 'space',
+                                    });
+
+                                    //  DETALLE
+                                    contentTable.add(
+                                      {
+                                        'type': 'header',
+                                        'label': 'DETALLE DE LA COTIZACIÓN'
+                                      }
+                                    );
+
+                                    for (int i = 0; i < groups.length; i++) {
+
+                                      contentTable.add({
+                                        'type': 'group',
+                                        'nombre': groups[i]['grupo_nombre'],
+                                        'sumatoria': groups[i]['sumatoria'],
+                                      });
+                                      contentTable.add({
+                                        'type': 'titles',
+                                      });
+                                      List<dynamic> products = groups[i]['productos'];
+                                      for (int j = 0; j < products.length; j++) {
+                                        contentTable.add({
+                                          'type': 'content',
+                                          'concepto': products[j]['concepto'],
+                                          'tipo_unidad': products[j]['tipo_unidad'],
+                                          'precio_unitario': products[j]['precio_unitario'],
+                                          'cantidad': products[j]['cantidad'],
+                                          'importe_total': products[j]['importe_total'],
+                                        });
+                                      }
+                                      
+                                    }
+
+                                    var chunks = [];
+                                    int chunkSize = 16;
+                                    for (var i = 0; i < contentTable.length; i += chunkSize) {
+                                      chunks.add(contentTable.sublist(
+                                          i,
+                                          i + chunkSize > contentTable.length
+                                              ? contentTable.length
+                                              : i + chunkSize));
+                                    }
+
+                                    print('Cantidad de chunks: ${chunks.length}');
+                                    for (int i = 0; i < chunks.length; i++) {
+                                      print('Chunk ${i + 1}: ${chunks[i].length} items');
+                                    }
+
+                                    Routes(context).goTo(PdfWithSignature(
+                                      configData: configData,
+                                      contentTable: contentTable,
+                                      chunks: chunks,
+                                    ));
+                                  },
+                                  child: Container(
+                                    width: 33.33 * vw,
+                                    height: 5 * vw,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(width: 0.15 * vw, color: Theme.of(context).primaryColor),
+                                      color: Colors.transparent
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Aceptar y firmar',
+                                        style: TextStyle(
+                                          fontSize: 1.2 * vw,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

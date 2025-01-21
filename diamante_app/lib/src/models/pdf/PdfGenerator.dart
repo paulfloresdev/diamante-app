@@ -37,7 +37,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
   late String folio;
 
   final SignatureController _signatureController = SignatureController(
-    penStrokeWidth: 3,
+    penStrokeWidth: 4.5,
     penColor: Colors.blue.shade800,
     exportBackgroundColor: Colors.white,
   );
@@ -190,6 +190,25 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                             fontWeight: pw.FontWeight.normal),
                                       ),
                                     ]),
+                                    pw.SizedBox(height: 6),
+                                    pw.Column(
+                                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                                      children: [
+                                        pw.Image(
+                                          image,
+                                          width: 45,
+                                          height: 45,
+                                        ),
+                                        pw.Text(
+                                          'Firma del cliente',
+                                          style: pw.TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: pw.FontWeight.bold),
+                                        ),
+                                      ]
+                                    ),
+                                    
+                                    pw.Container()
                                   ]),
                             ),
                             pw.SizedBox(width: 10),
@@ -245,7 +264,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                   color: PdfColor(111 / 255, 99 / 255, 94 / 255),
                   child: pw.Center(
                     child: pw.Text(
-                      'DETALLE DE LA COTIZACIÓN',
+                      item['label'],
                       style: pw.TextStyle(
                         fontSize: 12,
                         color: PdfColor(1, 1, 1),
@@ -259,7 +278,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                 return pw.Column(children: [
                   pw.Container(
                       width: 550.8,
-                      height: 30,
+                      height: 31.5,
                       color: PdfColor(1, 1, 1),
                       child: pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -396,31 +415,42 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                 ]);
               }
               if (item['type'] == 'group') {
-                return pw.Container(
-                  width: 550.8,
-                  height: 30,
-                  padding: pw.EdgeInsets.symmetric(horizontal: 4.5),
-                  color: PdfColor(230 / 255, 230 / 255, 240 / 255),
-                  child: pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text(
-                        item['nombre'],
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
+                return pw.Column(
+                  children: [
+                    pw.Container(
+                      width: 550.8,
+                      height: 28.5,
+                      padding: pw.EdgeInsets.symmetric(horizontal: 4.5),    
+                      color: item['subtype'] == 'resumen' ? PdfColor(1, 1, 1) : PdfColor(230 / 255, 230 / 255, 240 / 255),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            item['nombre'],
+                            style: pw.TextStyle(
+                              fontSize: 12,
+                              fontWeight: item['subtype'] == 'resumen' ? pw.FontWeight.normal : pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            Formatter.money(item['sumatoria']),
+                            style: pw.TextStyle(
+                              fontSize: 12,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      pw.Text(
-                        Formatter.money(item['sumatoria']),
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    item['subtype'] == 'resumen' ? pw.Container(
+                      width: 550.8,
+                      height: 1.5,
+                      color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                    ) : pw.SizedBox(),
+                  ]
                 );
+                
+                
               }
               if (item['type'] == 'signature') {
                 return pw.Column(children: [
@@ -460,6 +490,12 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                     ),
                   ),
                 ]);
+              }
+
+              if(item['type'] == 'space'){
+                return pw.SizedBox(
+                  height: 30,
+                );
               }
               return pw.Container(
                 width: 550.8,
@@ -525,8 +561,8 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
         children: [
           Expanded(
             child: Signature(
-              width: 137.7 * 2,
-              height: 137.7 * 2,
+              width: 137.7 * 3,
+              height: 137.7 * 3,
               controller: _signatureController,
               backgroundColor: Theme.of(context).shadowColor,
             ),
