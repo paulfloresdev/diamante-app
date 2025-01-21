@@ -1,13 +1,13 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 class DatabaseFiles {
-  final String dbPath =
-      '/data/user/0/com.example.myapp/databases/app_database.db';
-
   Future<void> requestStoragePermission() async {
     // Solicitar permisos de almacenamiento
     var status = await Permission.manageExternalStorage.request();
@@ -27,7 +27,8 @@ class DatabaseFiles {
 
     try {
       // Localiza la base de datos
-      final dbPath = '/data/user/0/com.example.diamante_app/databases/app_database.db';
+      final dbPath =
+          '/data/user/0/com.example.diamante_app/databases/app_database.db';
 
       final dbFile = File(dbPath);
 
@@ -62,5 +63,108 @@ class DatabaseFiles {
     }
   }
 
-  
+  Future<void> selectAndImportDatabase(BuildContext context) async {
+    final dbPath =
+        '/data/user/0/com.example.diamante_app/databases/app_database.db';
+
+    try {
+      // Select the .db file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any, // Se puede seleccionar cualquier archivo
+      );
+
+      if (result != null) {
+        // Path of the selected file
+        String selectedFilePath = result.files.single.path!;
+        print('Selected file: $selectedFilePath');
+
+        // Show confirmation dialog before replacing the database
+        bool shouldReplaceDatabase = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirmar reemplazo'),
+              content: Text(
+                '¿Deseas reemplazar la base de datos actual con la nueva plantilla seleccionada? Esta acción eliminará la base de datos actual.',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancelar'),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(false); // Don't replace or close the app
+                  },
+                ),
+                TextButton(
+                  child: Text('Reemplazar'),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(true); // Proceed with replacing the database
+                  },
+                ),
+              ],
+            );
+          },
+        );
+
+        // If the user confirmed, proceed with replacing the database
+        if (shouldReplaceDatabase) {
+          // Check if the selected file exists
+          final importedFile = File(selectedFilePath);
+          if (!importedFile.existsSync()) {
+            throw Exception('The selected file does not exist.');
+          }
+
+          // Check if the destination database exists and remove it
+          final destinationFile = File(dbPath);
+          if (destinationFile.existsSync()) {
+            print('Deleting existing database at: $dbPath');
+            destinationFile.deleteSync();
+          }
+
+          // Copy the file to the database location
+          importedFile.copySync(dbPath);
+          print('Database copied to: $dbPath');
+
+          // Verify the database has been copied
+          if (destinationFile.existsSync()) {
+            print('Database imported successfully.');
+
+            // Show confirmation dialog before closing the app
+            bool shouldCloseApp = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Plantilla Importada'),
+                  content: Text(
+                      'La plantilla ha sido importada con éxito. La app se cerrará ahora.'),
+                  actions: <Widget>[
+                    TextButton(
+                      child: Text('Cerrar app'),
+                      onPressed: () {
+                        Navigator.of(context).pop(true); // Close the app
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+
+            // If the user confirmed, close the app
+            if (shouldCloseApp) {
+              SystemNavigator.pop(); // This will close the app
+            }
+          } else {
+            throw Exception('Error importing the database.');
+          }
+        } else {
+          print('Database import canceled.');
+        }
+      } else {
+        print('No file selected.');
+      }
+    } catch (e) {
+      print('Error during database import: $e');
+    }
+  }
 }
