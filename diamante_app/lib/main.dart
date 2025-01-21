@@ -8,10 +8,9 @@ void main() async {
   // Inicializar la base de datos
   await databaseService.initializeDatabase();
 
-  // Insertar un valor
-  await databaseService.insertTestValue('Hola Mundo');
+  //  Inserta datos de prueba
+  await databaseService.insertTestValue();
 
-  // Leer valores
   var values = await databaseService.getTestValues();
   print('Valores en la base de datos: $values');
 
