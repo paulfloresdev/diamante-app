@@ -26,7 +26,7 @@ class GroupView extends StatefulWidget {
 }
 
 class _GroupViewState extends State<GroupView> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
 
   final TextEditingController _addSubGroupController = TextEditingController();
   final TextEditingController _conceptoController = TextEditingController();
@@ -42,8 +42,8 @@ class _GroupViewState extends State<GroupView> {
   @override
   void initState() {
     super.initState();
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    webDatabaseService = kIsWeb ? 
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
   }
 

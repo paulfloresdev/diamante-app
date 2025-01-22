@@ -34,7 +34,7 @@ class ConfigsView extends StatefulWidget {
 }
 
 class _ConfigsViewState extends State<ConfigsView> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
 
   late TextEditingController nombreClienteController;
   late TextEditingController monedaController;
@@ -49,8 +49,8 @@ class _ConfigsViewState extends State<ConfigsView> {
     // TODO: implement initState
     super.initState();
 
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    webDatabaseService = kIsWeb ?
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
 
     nombreClienteController = TextEditingController(text: widget.nombreCliente);
     monedaController = TextEditingController(text: widget.moneda);

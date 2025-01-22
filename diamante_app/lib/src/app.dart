@@ -9,7 +9,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Diamante Resorts app',
+        title: 'Diamante Cabo San Lucas',
         theme: ThemeData(
           splashColor: const Color.fromRGBO(240, 240, 255, 1),
           primaryColor: const Color.fromRGBO(60, 60, 75, 1),

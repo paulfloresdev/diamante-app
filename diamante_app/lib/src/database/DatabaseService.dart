@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -74,9 +77,7 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre_cliente TEXT NOT NULL,
         moneda TEXT NOT NULL CHECK(moneda IN ('MXN', 'USD')),
-        tipo_cambio REAL NOT NULL,
         iva_porcentaje REAL NOT NULL,
-        aplicar_iva BOOLEAN NOT NULL,
         nombre_empresa TEXT,
         domicilio TEXT,            -- Nuevo campo domicilio
         cp TEXT,                   -- Nuevo campo código postal
@@ -88,9 +89,7 @@ class DatabaseService {
     await db.insert('configs', {
       'nombre_cliente': 'Cliente Predeterminado',
       'moneda': 'MXN',
-      'tipo_cambio': 20.0, // Tipo de cambio predeterminado
       'iva_porcentaje': 16.0, // IVA predeterminado
-      'aplicar_iva': true,
       'nombre_empresa': 'Diamante Cabo San Lucas, S. de R.L. de C.V.',
       'domicilio':
           'Cabo San Lucas, Baja California Sur, México.', // Valor para domicilio
@@ -99,25 +98,21 @@ class DatabaseService {
     });
   }
 
-  /// Método para exportar los datos de la base de datos a un archivo JSON
   Future<String> exportToJson() async {
     final db = await instance.database;
 
     // Obtener todas las configs
-    List<dynamic> configs = await db.query('configs');
+    List<Map<String, dynamic>> configs = await db.query('configs');
 
-    // Obtener todas las configs
-    List<dynamic> groups = await db.query('grupos');
+    // Obtener todas las configs de otros datos
+    List<Map<String, dynamic>> groups = await db.query('grupos');
+    List<Map<String, dynamic>> subgroups = await db.query('subgrupos');
+    List<Map<String, dynamic>> products = await db.query('productos');
 
-    // Obtener todas las configs
-    List<dynamic> subgroups = await db.query('subgrupos');
-
-    // Obtener todas las configs
-    List<dynamic> products = await db.query('productos');
-
+    // Convertir a Map<String, dynamic>
     Map<String, dynamic> data = {
-      'export_date': DateTime.now(),
-      'configs': configs.first,
+      "export_date": DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),  // Formato de fecha
+      'configs': configs.first,  // Asegúrate de que esta lista esté bien formateada
       'grupos': groups,
       'subgrupos': subgroups,
       'productos': products.map((product) {
@@ -135,9 +130,48 @@ class DatabaseService {
       }).toList(),
     };
 
-    String jsonString = data.toString();
-
+    // Convertir el mapa a un string JSON
+    String jsonString = jsonEncode(data);  // Utiliza jsonEncode en lugar de toString
     return jsonString;
+  }
+
+  Future<void> clearTables() async {
+    try {
+      final db = await instance.database;
+      
+      await db.delete('productos');
+      await db.execute('DELETE FROM sqlite_sequence WHERE name = "productos"');
+
+      await db.delete('subgrupos');
+      await db.execute('DELETE FROM sqlite_sequence WHERE name = "subgrupos"');
+
+      await db.delete('grupos');
+      await db.execute('DELETE FROM sqlite_sequence WHERE name = "grupos"');
+
+      print("Tablas vaciadas correctamente.");
+    } catch (e) {
+      print("Error al vaciar las tablas': $e");
+    }
+  }
+
+  Future<int> createConfig({required String nombreCliente,
+    required String moneda,
+    required double porcentajeIVA,
+    required String nombreEmpresa,
+    required String domicilio,
+    required String cp,
+    required String telefono,}) async {
+    print('Ejecutado: createGrupo');
+    final db = await instance.database;
+    return await db.insert('configs', {
+      'nombre_cliente': nombreCliente,
+      'moneda': moneda,
+      'iva_porcentaje': porcentajeIVA,
+      'nombre_empresa': nombreEmpresa,
+      'domicilio': domicilio,
+      'cp': cp,
+      'telefono': telefono,
+    });
   }
 
   Future<Map<String, dynamic>?> getConfigById(int id) async {

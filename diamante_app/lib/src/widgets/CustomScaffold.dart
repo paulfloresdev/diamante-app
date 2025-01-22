@@ -1,9 +1,13 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:diamante_app/src/database/DatabaseFiles.dart';
 import 'package:diamante_app/src/database/DatabaseService.dart';
+import 'package:diamante_app/src/database/WebDatabaseFiles.dart';
 import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/models/pdf/PdfGenerator.dart';
 import 'package:diamante_app/src/views/ConfigsView.dart';
+import 'package:diamante_app/src/views/OverView.dart';
 import 'package:diamante_app/src/widgets/NavBar.dart';
+import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
 import 'Buttons/CircularButton.dart';
+import 'dialogs-snackbars/ConfirmDialog.dart';
 
 class Customscaffold extends StatefulWidget {
   final int groupId;
@@ -22,20 +27,72 @@ class Customscaffold extends StatefulWidget {
 }
 
 class _CustomscaffoldState extends State<Customscaffold> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
+  late var isLoading;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    isLoading = false;
+    webDatabaseService = kIsWeb ?
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
+  }
+
+  Future<bool> _showDeleteConfirmationDialog(
+      {required BuildContext context ,required String title, required String subTitle}) async {
+    return (await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return ConfirmDialog(
+              title: title,
+              subTitle: subTitle,
+              confirmLabel: 'Reemplazar',
+              confirmColor: Theme.of(context).primaryColorDark,
+              declineLabel: 'Cancelar',
+              declineColor: Colors.grey.shade700,
+            );
+          },
+        )) ??
+        false; // Devuelve false si el valor retornado es nulo
   }
 
   @override
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
     double vw = responsive.viewportWidth;
+
+    if(isLoading){
+      return Scaffold(
+        backgroundColor: Theme.of(context).splashColor,
+        body: SizedBox(
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              FadeIn(
+                duration: const Duration(milliseconds: 2000),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 25 * vw,
+                  color: Theme.of(context).secondaryHeaderColor,
+                ),
+              ),
+              SizedBox(height: 2.5*vw),
+              SizedBox(
+                width: 3 * vw, // Ajusta el ancho
+                height: 3 * vw, // Ajusta la altura
+                child: CircularProgressIndicator(
+                  strokeWidth: 0.6 * vw, // Ajusta el grosor
+                  color: Theme.of(context).shadowColor,
+                ),
+              )
+
+            ],
+          ),
+        ));
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).splashColor,
@@ -53,19 +110,42 @@ class _CustomscaffoldState extends State<Customscaffold> {
                     color: Theme.of(context).secondaryHeaderColor,
                     width: 7.5 * vw),
                 SizedBox(width: 1.25 * vw),
-                CircularButton(
+                widget.groupId == 0 ? CircularButton(
                   onPressed: () async {
-                    DatabaseFiles().exportDatabase(context: context);
+                    //AQUÍ
+                    if(kIsWeb){
+                      Webdatabasefiles().exportDatabase(context: context);
+                    }else{
+                      DatabaseFiles().exportDatabase(context: context);
+                    }
                   },
                   icon: Icons.arrow_upward_rounded,
-                ),
+                ) : SizedBox(),
                 SizedBox(width: 0.25 * vw),
-                CircularButton(
-                  onPressed: () {},
+                widget.groupId == 0 ? CircularButton(
+                  onPressed: () async {
+                    if(await _showDeleteConfirmationDialog(context: context, title: 'Reemplazar base de datos', subTitle: '¿Estás seguro de reemplazar la base de datos?, todos actuales se perderán.')){
+                      setState(() {
+                        isLoading = true;
+                      });
+                      if(kIsWeb){
+                        await Webdatabasefiles().importDatabase(context);
+                      }else{
+                        await DatabaseFiles().importDatabase(context);
+                      }
+                      CustomSnackBar(context: context).show('Base de datos reemplazada exitosamente.');
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }else{
+                      print('No se reemplazará');
+                    }
+                    Routes(context).goTo(OverView());
+                  },
                   icon: Icons.arrow_downward_rounded,
-                ),
+                ) : SizedBox(),
                 SizedBox(width: 0.25 * vw),
-                CircularButton(
+                widget.groupId == 0 ? CircularButton(
                   onPressed: () async {
                     Map<String, dynamic>? data = kIsWeb
                         ? await webDatabaseService.getConfigById(1)
@@ -83,7 +163,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
                     }
                   },
                   icon: Icons.settings_outlined,
-                ),
+                ) : SizedBox(),
                 SizedBox(width: 0.25 * vw),
                 /*CircularButton(
                     onPressed: () async {

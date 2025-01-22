@@ -22,7 +22,7 @@ class Navbar extends StatefulWidget {
 }
 
 class _NavbarState extends State<Navbar> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
 
   final TextEditingController _addGroupController = TextEditingController();
   late Future<List<Map<String, dynamic>>> _futureGroups;
@@ -31,8 +31,8 @@ class _NavbarState extends State<Navbar> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    webDatabaseService = kIsWeb ? 
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
   }
 

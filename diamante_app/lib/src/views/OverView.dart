@@ -22,7 +22,7 @@ class OverView extends StatefulWidget {
 }
 
 class _OverViewState extends State<OverView> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
 
   late Future<Map<String, dynamic>> _futureData;
   late Future<Map<String, dynamic>?> _futureConfig;
@@ -32,8 +32,8 @@ class _OverViewState extends State<OverView> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    webDatabaseService = kIsWeb ?
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
     isOpen = true;
   }

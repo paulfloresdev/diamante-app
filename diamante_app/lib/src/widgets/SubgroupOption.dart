@@ -31,14 +31,14 @@ class SubgroupOption extends StatefulWidget {
 }
 
 class _SubgroupOptionState extends State<SubgroupOption> {
-  late WebDatabaseService webDatabaseService;
+  late var webDatabaseService;
   late bool otherHaveSelected = false;
 
   @override
   void initState() {
     super.initState();
-    webDatabaseService =
-        Provider.of<WebDatabaseService>(context, listen: false);
+    webDatabaseService = kIsWeb ?
+        Provider.of<WebDatabaseService>(context, listen: false) : null;
     check();
   }
 

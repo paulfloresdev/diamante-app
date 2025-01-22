@@ -34,8 +34,12 @@ void main() async {
     MultiProvider(
       providers: [
         if (kIsWeb)
+        Provider<WebDatabaseService>(
+          create: (_) => webDatabaseService!,
+        )
+        else
           Provider<WebDatabaseService>(
-            create: (_) => webDatabaseService!, // Proporciona la instancia
+            create: (_) => throw UnimplementedError('WebDatabaseService no está disponible en esta plataforma'),
           ),
       ],
       child: const MainApp(),

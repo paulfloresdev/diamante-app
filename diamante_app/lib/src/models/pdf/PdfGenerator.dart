@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:diamante_app/src/models/auxiliars/Router.dart';
+import 'package:diamante_app/src/models/pdf/PdfWeb.dart';
 import 'package:diamante_app/src/views/OverView.dart';
 import 'package:diamante_app/src/widgets/Buttons/CircularButton.dart';
 import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
@@ -10,15 +11,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:signature/signature.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter/services.dart' as flutter_services;
-import 'package:universal_html/html.dart' as html; // Para descargar en web
+
 
 import '../auxiliars/Responsive.dart';
 
@@ -527,24 +525,32 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
 
     if (kIsWeb) {
       // Manejo específico para la web
-      final blob = html.Blob([await pdf.save()]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..target = 'blank'
-        ..download = fileName
-        ..click();
-      html.Url.revokeObjectUrl(url); // Limpieza de memoria
-      print("Archivo descargado en la web.");
+      Pdfweb().download(await pdf.save(), fileName);
+      
     } else {
       // Manejo para móviles
       // Verificar permisos de almacenamiento
       if (await Permission.manageExternalStorage.request().isGranted) {
-        final directory = Directory('/storage/emulated/0/Download');
-        if (!directory.existsSync()) {
-          directory.createSync(recursive: true);
+        // Ruta de la carpeta Docs
+        var docsDirectory = Directory('/storage/emulated/0/Documents');
+
+        final diamanteDirectory = Directory('${docsDirectory.path}/Diamante');
+
+        if(!diamanteDirectory.existsSync()){
+          diamanteDirectory.createSync(recursive: true);
         }
 
-        final file = File("${directory.path}/$fileName");
+        // Ruta de la carpeta personalizada dentro de Descargas
+        final targetDirectory = Directory('${diamanteDirectory.path}/Cotizaciones');
+
+        // Crear la carpeta si no existe
+        if (!targetDirectory.existsSync()) {
+          targetDirectory.createSync(recursive: true);
+          print("Carpeta 'Cotizaciones' creada en Descargas.");
+        }
+
+
+        final file = File("${targetDirectory.path}/$fileName");
         await file.writeAsBytes(await pdf.save());
 
         Share.shareFiles([file.path],

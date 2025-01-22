@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
@@ -84,23 +85,16 @@ class WebDatabaseService {
     });
   }
 
-  /// Método para exportar los datos de la base de datos a un archivo JSON
   Future<String> exportToJson() async {
-    // Obtener todas las configs
+    // Obtener todas las configs (esto es solo un ejemplo, debe adaptarse a tu base de datos)
     List<dynamic> configs = await _database.query('configs');
-
-    // Obtener todas las configs
     List<dynamic> groups = await _database.query('grupos');
-
-    // Obtener todas las configs
     List<dynamic> subgroups = await _database.query('subgrupos');
-
-    // Obtener todas las configs
     List<dynamic> products = await _database.query('productos');
 
     Map<String, dynamic> data = {
-      'export_date': DateTime.now(),
-      'configs': configs.first,
+      'export_date': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()), // Formato de fecha
+      'configs': configs.first, // Puedes dejarlo como está si configs ya está correctamente formateado
       'grupos': groups,
       'subgrupos': subgroups,
       'productos': products.map((product) {
@@ -113,15 +107,16 @@ class WebDatabaseService {
           'importe_total': product['importe_total'],
           'is_selected': product['is_selected'],
           'subgrupo_id': product['subgrupo_id'],
-          // Agregar más campos si es necesario
         };
       }).toList(),
     };
 
-    String jsonString = data.toString();
+    // Serializar el mapa a JSON válido
+    String jsonString = jsonEncode(data); // Usa jsonEncode para convertirlo a un string JSON
 
     return jsonString;
   }
+
 
   /// Método para obtener datos de la tabla Test
   Future<List<Map<String, dynamic>>> getTestValues() async {
@@ -135,6 +130,47 @@ class WebDatabaseService {
       whereArgs: [id],
     );
     return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<void> clearTables() async {
+    try {
+      // Eliminar datos de cada tabla
+      await _database.delete('productos');
+      await _database.delete('subgrupos');
+      await _database.delete('grupos');
+
+      // Limpiar la base de datos para reiniciar contadores
+      await _database.execute('VACUUM;');
+
+      print("Tablas vaciadas y contadores reiniciados correctamente.");
+    } catch (e) {
+      print("Error al vaciar las tablas: $e");
+    }
+  }
+
+  Future<int> createConfig({required String nombreCliente,
+    required String moneda,
+    required double porcentajeIVA,
+    required String nombreEmpresa,
+    required String domicilio,
+    required String cp,
+    required String telefono,}) async {
+    try{
+      print('entre a crear config');
+      return await _database.insert('configs', {
+        'nombre_cliente': nombreCliente,
+        'moneda': moneda,
+        'iva_porcentaje': porcentajeIVA,
+        'nombre_empresa': nombreEmpresa,
+        'domicilio': domicilio,
+        'cp': cp,
+        'telefono': telefono,
+      });
+    }catch(e){ 
+      print(e);
+      throw Exception(e);
+    }
+    
   }
 
   Future<void> updateConfig(
