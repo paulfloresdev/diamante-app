@@ -1,7 +1,10 @@
 import 'package:diamante_app/src/database/DatabaseService.dart';
 import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
 
 class SubgroupOption extends StatefulWidget {
@@ -28,21 +31,35 @@ class SubgroupOption extends StatefulWidget {
 }
 
 class _SubgroupOptionState extends State<SubgroupOption> {
+  late WebDatabaseService webDatabaseService;
   late bool otherHaveSelected = false;
 
   @override
   void initState() {
     super.initState();
+    webDatabaseService =
+        Provider.of<WebDatabaseService>(context, listen: false);
     check();
   }
 
   void check() async {
     // Realiza la operación asíncrona fuera de setState
-    bool result = await DatabaseService.instance.otherSubgroupsHaveSelectedProducts(widget.subGroup['id'], widget.subGroup['grupo_id']);
-    // Luego, actualiza el estado de forma síncrona
-    setState(() {
-      otherHaveSelected = result;
-    });
+    if (kIsWeb) {
+      bool result = await webDatabaseService.otherSubgroupsHaveSelectedProducts(
+          widget.subGroup['id'], widget.subGroup['grupo_id']);
+      // Luego, actualiza el estado de forma síncrona
+      setState(() {
+        otherHaveSelected = result;
+      });
+    } else {
+      bool result = await DatabaseService.instance
+          .otherSubgroupsHaveSelectedProducts(
+              widget.subGroup['id'], widget.subGroup['grupo_id']);
+      // Luego, actualiza el estado de forma síncrona
+      setState(() {
+        otherHaveSelected = result;
+      });
+    }
   }
 
   @override
@@ -51,7 +68,10 @@ class _SubgroupOptionState extends State<SubgroupOption> {
     var vw = responsive.viewportWidth;
 
     return GestureDetector(
-      onTap: otherHaveSelected ? () => CustomSnackBar(context: context).show('No puedes acceder a esta propuesta porque ya has seleccionado productos de otra propuesta, puedes eliminarlos de la selección en la pestaña \'Cotización\'.') : widget.onPressed ?? () {},
+      onTap: otherHaveSelected
+          ? () => CustomSnackBar(context: context).show(
+              'No puedes acceder a esta propuesta porque ya has seleccionado productos de otra propuesta, puedes eliminarlos de la selección en la pestaña \'Cotización\'.')
+          : widget.onPressed ?? () {},
       onLongPress: widget.onLongPress,
       child: Container(
         width: 18.4 * vw,
@@ -68,7 +88,9 @@ class _SubgroupOptionState extends State<SubgroupOption> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   width: 0.1 * vw,
-                  color: otherHaveSelected ? Theme.of(context).shadowColor : Theme.of(context).secondaryHeaderColor,
+                  color: otherHaveSelected
+                      ? Theme.of(context).shadowColor
+                      : Theme.of(context).secondaryHeaderColor,
                 ),
               ),
               child: widget.isFocused
@@ -92,7 +114,9 @@ class _SubgroupOptionState extends State<SubgroupOption> {
                 widget.subGroup['nombre'],
                 style: TextStyle(
                   fontSize: 1.3 * vw,
-                  color: otherHaveSelected ? Colors.grey.shade400 : Theme.of(context).primaryColor,
+                  color: otherHaveSelected
+                      ? Colors.grey.shade400
+                      : Theme.of(context).primaryColor,
                   fontWeight:
                       widget.isFocused ? FontWeight.w600 : FontWeight.w400,
                 ),

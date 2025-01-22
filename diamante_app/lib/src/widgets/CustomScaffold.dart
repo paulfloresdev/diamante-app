@@ -4,8 +4,11 @@ import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/models/pdf/PdfGenerator.dart';
 import 'package:diamante_app/src/views/ConfigsView.dart';
 import 'package:diamante_app/src/widgets/NavBar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
 import 'Buttons/CircularButton.dart';
 
@@ -19,6 +22,16 @@ class Customscaffold extends StatefulWidget {
 }
 
 class _CustomscaffoldState extends State<Customscaffold> {
+  late WebDatabaseService webDatabaseService;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    webDatabaseService =
+        Provider.of<WebDatabaseService>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
@@ -42,21 +55,21 @@ class _CustomscaffoldState extends State<Customscaffold> {
                 SizedBox(width: 1.25 * vw),
                 CircularButton(
                   onPressed: () async {
-                    await DatabaseFiles().exportDatabase();
+                    DatabaseFiles().exportDatabase(context: context);
                   },
                   icon: Icons.arrow_upward_rounded,
                 ),
                 SizedBox(width: 0.25 * vw),
                 CircularButton(
-                  onPressed: () =>
-                      DatabaseFiles().selectAndImportDatabase(context),
+                  onPressed: () {},
                   icon: Icons.arrow_downward_rounded,
                 ),
                 SizedBox(width: 0.25 * vw),
                 CircularButton(
                   onPressed: () async {
-                    Map<String, dynamic>? data =
-                        await DatabaseService.instance.getConfigById(1);
+                    Map<String, dynamic>? data = kIsWeb
+                        ? await webDatabaseService.getConfigById(1)
+                        : await DatabaseService.instance.getConfigById(1);
 
                     if (data != {}) {
                       Routes(context).goTo(ConfigsView(

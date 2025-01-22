@@ -6,6 +6,7 @@ import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/views/OverView.dart';
 import 'package:diamante_app/src/widgets/Buttons/CircularButton.dart';
 import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +18,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:signature/signature.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart' as flutter_services;
+import 'package:universal_html/html.dart' as html; // Para descargar en web
 
 import '../auxiliars/Responsive.dart';
 
@@ -192,22 +194,21 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                     ]),
                                     pw.SizedBox(height: 6),
                                     pw.Column(
-                                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                                      children: [
-                                        pw.Image(
-                                          image,
-                                          width: 45,
-                                          height: 45,
-                                        ),
-                                        pw.Text(
-                                          'Firma del cliente',
-                                          style: pw.TextStyle(
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.center,
+                                        children: [
+                                          pw.Image(
+                                            image,
+                                            width: 45,
+                                            height: 45,
+                                          ),
+                                          pw.Text(
+                                            'Firma del cliente',
+                                            style: pw.TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: pw.FontWeight.bold),
-                                        ),
-                                      ]
-                                    ),
-                                    
+                                          ),
+                                        ]),
                                     pw.Container()
                                   ]),
                             ),
@@ -415,42 +416,44 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                 ]);
               }
               if (item['type'] == 'group') {
-                return pw.Column(
-                  children: [
-                    pw.Container(
-                      width: 550.8,
-                      height: 28.5,
-                      padding: pw.EdgeInsets.symmetric(horizontal: 4.5),    
-                      color: item['subtype'] == 'resumen' ? PdfColor(1, 1, 1) : PdfColor(230 / 255, 230 / 255, 240 / 255),
-                      child: pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text(
-                            item['nombre'],
-                            style: pw.TextStyle(
-                              fontSize: 12,
-                              fontWeight: item['subtype'] == 'resumen' ? pw.FontWeight.normal : pw.FontWeight.bold,
-                            ),
+                return pw.Column(children: [
+                  pw.Container(
+                    width: 550.8,
+                    height: 28.5,
+                    padding: pw.EdgeInsets.symmetric(horizontal: 4.5),
+                    color: item['subtype'] == 'resumen'
+                        ? PdfColor(1, 1, 1)
+                        : PdfColor(230 / 255, 230 / 255, 240 / 255),
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          item['nombre'],
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: item['subtype'] == 'resumen'
+                                ? pw.FontWeight.normal
+                                : pw.FontWeight.bold,
                           ),
-                          pw.Text(
-                            Formatter.money(item['sumatoria']),
-                            style: pw.TextStyle(
-                              fontSize: 12,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
+                        ),
+                        pw.Text(
+                          Formatter.money(item['sumatoria']),
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    item['subtype'] == 'resumen' ? pw.Container(
-                      width: 550.8,
-                      height: 1.5,
-                      color: PdfColor(210 / 255, 210 / 255, 220 / 255),
-                    ) : pw.SizedBox(),
-                  ]
-                );
-                
-                
+                  ),
+                  item['subtype'] == 'resumen'
+                      ? pw.Container(
+                          width: 550.8,
+                          height: 1.5,
+                          color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                        )
+                      : pw.SizedBox(),
+                ]);
               }
               if (item['type'] == 'signature') {
                 return pw.Column(children: [
@@ -492,7 +495,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                 ]);
               }
 
-              if(item['type'] == 'space'){
+              if (item['type'] == 'space') {
                 return pw.SizedBox(
                   height: 30,
                 );
@@ -522,20 +525,33 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
     }
     ;
 
-    // Verificar permisos de almacenamiento
-    if (await Permission.manageExternalStorage.request().isGranted) {
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
-      }
-
-      final file = File("${directory.path}/$fileName");
-      await file.writeAsBytes(await pdf.save());
-
-      Share.shareFiles([file.path],
-          text: "¡Mira este archivo PDF con firma! Folio: $folio");
+    if (kIsWeb) {
+      // Manejo específico para la web
+      final blob = html.Blob([await pdf.save()]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..target = 'blank'
+        ..download = fileName
+        ..click();
+      html.Url.revokeObjectUrl(url); // Limpieza de memoria
+      print("Archivo descargado en la web.");
     } else {
-      print("Permiso de almacenamiento denegado.");
+      // Manejo para móviles
+      // Verificar permisos de almacenamiento
+      if (await Permission.manageExternalStorage.request().isGranted) {
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+
+        final file = File("${directory.path}/$fileName");
+        await file.writeAsBytes(await pdf.save());
+
+        Share.shareFiles([file.path],
+            text: "¡Mira este archivo PDF con firma! Folio: $folio");
+      } else {
+        print("Permiso de almacenamiento denegado.");
+      }
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:diamante_app/src/widgets/CustomScaffold.dart';
 import 'package:flutter/material.dart';
 
 class WebOverView extends StatefulWidget {
@@ -10,8 +11,15 @@ class WebOverView extends StatefulWidget {
 class _WebOverViewState extends State<WebOverView> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.red,
+    return Customscaffold(
+      groupId: 0,
+      body: ListView(
+        children: [
+          Text(
+            'Web',
+          ),
+        ],
+      ),
     );
   }
 }

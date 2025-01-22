@@ -1,44 +1,69 @@
+import 'dart:convert';
 import 'dart:io';
-
 import 'package:diamante_app/src/database/DatabaseService.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:diamante_app/src/database/WebDatabaseService.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart' as foundation;
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart' as html;
+import 'package:universal_html/html.dart' as html;
 
 class DatabaseFiles {
-  Future<void> requestStoragePermission() async {
-    // Solicitar permisos de almacenamiento
-    var status = await Permission.manageExternalStorage.request();
+  Future<void> exportDatabase({required BuildContext context}) async {
+    try {
+      if (kIsWeb) {
+        final WebDatabaseService databaseService =
+            Provider.of<WebDatabaseService>(context, listen: false);
+        String jsonString = await databaseService.exportToJson();
 
-    if (status.isGranted) {
-      print("Permiso de almacenamiento concedido");
-    } else if (status.isDenied) {
-      print("Permiso de almacenamiento denegado");
-    } else if (status.isPermanentlyDenied) {
-      openAppSettings();
+        final blob = html.Blob([jsonString]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..target = 'blank'
+          ..download = 'plantilla-exportada-${DateTime.now()}.json'
+          ..click();
+        html.Url.revokeObjectUrl(url); // Limpieza de memoria
+        print("Archivo JSON descargado en la web.");
+      } else {
+        // Manejo para dispositivos móviles
+        String jsonString = await DatabaseService.instance.exportToJson();
+
+        if (await Permission.manageExternalStorage.request().isGranted) {
+          // Crear un archivo temporal en el dispositivo
+          final tempFile = File(
+              '${Directory.systemTemp.path}/plantilla-exportada-${DateTime.now()}.json');
+
+          // Escribir el JSON en el archivo
+          await tempFile.writeAsString(jsonString);
+
+          // Compartir el archivo utilizando share_plus
+          Share.shareFiles([tempFile.path],
+              text: "¡Mira este archivo JSON exportado!");
+          print("Archivo JSON compartido en el dispositivo móvil.");
+        } else {
+          print("Permiso de almacenamiento denegado.");
+        }
+      }
+    } catch (e) {
+      print('Error al exportar la base de datos: $e');
     }
   }
 
-  /*Future<List<int>> deleteSelection() async{
-    List<int> productIds = [];
-
-    await DatabaseService.instance.
-
-    return productIds;
-  }*/
-
-  Future<void> exportDatabase() async {
-    // Solicitar permisos de almacenamiento antes de exportar
-    await requestStoragePermission();
+  Future<void> _exportDatabaseForMobile() async {
+    // Solicitar permisos de almacenamiento
+    final status = await Permission.manageExternalStorage.request();
+    if (!status.isGranted) {
+      print('Permiso denegado para acceder al almacenamiento.');
+      return;
+    }
 
     try {
-      // Localiza la base de datos
-      final dbPath =
-          '/data/user/0/com.example.diamante_app/databases/app_database.db';
-
+      // Localizar la base de datos en el dispositivo
+      final dbPath = '/data/user/0/com.example.app/databases/app_database.db';
       final dbFile = File(dbPath);
 
       if (!await dbFile.exists()) {
@@ -46,14 +71,7 @@ class DatabaseFiles {
         return;
       }
 
-      // Solicita permiso para acceder a almacenamiento externo
-      final status = await Permission.manageExternalStorage.request();
-      if (!status.isGranted) {
-        print('Permiso denegado para acceder al almacenamiento.');
-        return;
-      }
-
-      // Copia el archivo a la carpeta Descargas
+      // Ruta para guardar el archivo exportado
       final downloadDir = Directory('/storage/emulated/0/Download');
       if (!await downloadDir.exists()) {
         print('No se encontró la carpeta Descargas.');
@@ -61,119 +79,14 @@ class DatabaseFiles {
       }
 
       final exportPath =
-          '${downloadDir.path}/Plantilla-exportada-${DateFormat('yyyy-MM-dd-hhmmss').format(DateTime.now())}.db';
+          '${downloadDir.path}/database-export-${DateFormat('yyyy-MM-dd-hhmmss').format(DateTime.now())}.db';
       await dbFile.copy(exportPath);
 
-      // Comparte el archivo exportado
+      // Compartir el archivo exportado
       await Share.shareFiles([exportPath], text: 'Base de datos exportada');
       print('Base de datos exportada exitosamente a: $exportPath');
     } catch (e) {
-      print('Error al exportar la base de datos: $e');
-    }
-  }
-
-  Future<void> selectAndImportDatabase(BuildContext context) async {
-    final dbPath =
-        '/data/user/0/com.example.diamante_app/databases/app_database.db';
-
-    try {
-      // Select the .db file
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any, // Se puede seleccionar cualquier archivo
-      );
-
-      if (result != null) {
-        // Path of the selected file
-        String selectedFilePath = result.files.single.path!;
-        print('Selected file: $selectedFilePath');
-
-        // Show confirmation dialog before replacing the database
-        bool shouldReplaceDatabase = await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Confirmar reemplazo'),
-              content: Text(
-                '¿Deseas reemplazar la base de datos actual con la nueva plantilla seleccionada? Esta acción eliminará la base de datos actual.',
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Cancelar'),
-                  onPressed: () {
-                    Navigator.of(context)
-                        .pop(false); // Don't replace or close the app
-                  },
-                ),
-                TextButton(
-                  child: Text('Reemplazar'),
-                  onPressed: () {
-                    Navigator.of(context)
-                        .pop(true); // Proceed with replacing the database
-                  },
-                ),
-              ],
-            );
-          },
-        );
-
-        // If the user confirmed, proceed with replacing the database
-        if (shouldReplaceDatabase) {
-          // Check if the selected file exists
-          final importedFile = File(selectedFilePath);
-          if (!importedFile.existsSync()) {
-            throw Exception('The selected file does not exist.');
-          }
-
-          // Check if the destination database exists and remove it
-          final destinationFile = File(dbPath);
-          if (destinationFile.existsSync()) {
-            print('Deleting existing database at: $dbPath');
-            destinationFile.deleteSync();
-          }
-
-          // Copy the file to the database location
-          importedFile.copySync(dbPath);
-          print('Database copied to: $dbPath');
-
-          // Verify the database has been copied
-          if (destinationFile.existsSync()) {
-            print('Database imported successfully.');
-
-            // Show confirmation dialog before closing the app
-            bool shouldCloseApp = await showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text('Plantilla Importada'),
-                  content: Text(
-                      'La plantilla ha sido importada con éxito. La app se cerrará ahora.'),
-                  actions: <Widget>[
-                    TextButton(
-                      child: Text('Cerrar app'),
-                      onPressed: () {
-                        Navigator.of(context).pop(true); // Close the app
-                      },
-                    ),
-                  ],
-                );
-              },
-            );
-
-            // If the user confirmed, close the app
-            if (shouldCloseApp) {
-              SystemNavigator.pop(); // This will close the app
-            }
-          } else {
-            throw Exception('Error importing the database.');
-          }
-        } else {
-          print('Database import canceled.');
-        }
-      } else {
-        print('No file selected.');
-      }
-    } catch (e) {
-      print('Error during database import: $e');
+      print('Error al exportar la base de datos en móvil: $e');
     }
   }
 }

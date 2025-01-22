@@ -4,9 +4,12 @@ import 'package:diamante_app/src/widgets/Buttons/BoxButton.dart';
 import 'package:diamante_app/src/widgets/CustomScaffold.dart';
 import 'package:diamante_app/src/widgets/Input.dart';
 import 'package:diamante_app/src/widgets/ProductCard.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../database/DatabaseService.dart';
+import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
 import '../widgets/Dialogs-Snackbars/ConfirmDialog.dart';
 import '../widgets/Dialogs-Snackbars/CustomSnackBar.dart';
@@ -23,6 +26,8 @@ class GroupView extends StatefulWidget {
 }
 
 class _GroupViewState extends State<GroupView> {
+  late WebDatabaseService webDatabaseService;
+
   final TextEditingController _addSubGroupController = TextEditingController();
   final TextEditingController _conceptoController = TextEditingController();
   final TextEditingController _unidadController = TextEditingController();
@@ -37,23 +42,35 @@ class _GroupViewState extends State<GroupView> {
   @override
   void initState() {
     super.initState();
+    webDatabaseService =
+        Provider.of<WebDatabaseService>(context, listen: false);
     _reload();
   }
 
   void _reload() {
     setState(() {
-      _futureSubGroups =
-          DatabaseService.instance.getSubgruposByGrupo(widget.groupId);
-      _futureProducts =
-          DatabaseService.instance.getProductosBySubgrupo(widget.subGroupId);
+      if (kIsWeb) {
+        _futureSubGroups =
+            webDatabaseService.getSubgruposByGrupo(widget.groupId);
+        _futureProducts =
+            webDatabaseService.getProductosBySubgrupo(widget.subGroupId);
+      } else {
+        _futureSubGroups =
+            DatabaseService.instance.getSubgruposByGrupo(widget.groupId);
+        _futureProducts =
+            DatabaseService.instance.getProductosBySubgrupo(widget.subGroupId);
+      }
     });
   }
 
-  void _autoSelect() async{
+  void _autoSelect() async {
     var subGroups = await _futureSubGroups;
-    if(subGroups.length == 1){
-      int sgId= subGroups.first['id'];
-      Routes(context).goTo(GroupView(groupId: widget.groupId, subGroupId: sgId,));
+    if (subGroups.length == 1) {
+      int sgId = subGroups.first['id'];
+      Routes(context).goTo(GroupView(
+        groupId: widget.groupId,
+        subGroupId: sgId,
+      ));
     }
   }
 
@@ -61,8 +78,13 @@ class _GroupViewState extends State<GroupView> {
   Future<void> addSubGroup() async {
     final subGroupName = _addSubGroupController.text.trim();
     if (subGroupName.isNotEmpty) {
-      await DatabaseService.instance
-          .createSubgrupo(subGroupName, widget.groupId);
+      if (kIsWeb) {
+        await webDatabaseService.createSubgrupo(subGroupName, widget.groupId);
+      } else {
+        await DatabaseService.instance
+            .createSubgrupo(subGroupName, widget.groupId);
+      }
+
       CustomSnackBar(context: context).show('Subgrupo creado correctamente.');
       _reload();
       _autoSelect();
@@ -91,8 +113,13 @@ class _GroupViewState extends State<GroupView> {
 
   Future<void> editSubGroup(String newSubGroupName, int subgroupId) async {
     if (newSubGroupName.isNotEmpty) {
-      await DatabaseService.instance
-          .updateSubgrupo(subgroupId, newSubGroupName);
+      if (kIsWeb) {
+        await webDatabaseService.updateSubgrupo(subgroupId, newSubGroupName);
+      } else {
+        await DatabaseService.instance
+            .updateSubgrupo(subgroupId, newSubGroupName);
+      }
+
       CustomSnackBar(context: context)
           .show('Subgrupo actualizado correctamente.');
       _reload(); // Recarga los grupos.
@@ -118,19 +145,32 @@ class _GroupViewState extends State<GroupView> {
           onConfirm: () => editSubGroup(editController.text.trim(), subgroupId),
           confirmLabel: 'Guardar',
           onDecline: () async {
-            var hasSelected = await DatabaseService.instance.hasSelectedProducts(subgroupId);
+            late var hasSelected;
 
-            if(hasSelected){
-              CustomSnackBar(context: context)
-                  .show('No es posible eliminar esta propuesta ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
-            }else{
+            if (kIsWeb) {
+              hasSelected =
+                  await webDatabaseService.hasSelectedProducts(subgroupId);
+            } else {
+              hasSelected = await DatabaseService.instance
+                  .hasSelectedProducts(subgroupId);
+            }
+
+            if (hasSelected) {
+              CustomSnackBar(context: context).show(
+                  'No es posible eliminar esta propuesta ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
+            } else {
               final bool confirmDelete = await _showDeleteConfirmationDialog(
-                title: 'Eliminar subgrupo',
-                subTitle:
-                    '¿Estás seguro que deseas eliminarlo?, todos los datos se perderán.');
+                  title: 'Eliminar subgrupo',
+                  subTitle:
+                      '¿Estás seguro que deseas eliminarlo?, todos los datos se perderán.');
 
               if (confirmDelete) {
-                await DatabaseService.instance.deleteSubgrupo(subgroupId);
+                if (kIsWeb) {
+                  await webDatabaseService.deleteSubgrupo(subgroupId);
+                } else {
+                  await DatabaseService.instance.deleteSubgrupo(subgroupId);
+                }
+
                 CustomSnackBar(context: context)
                     .show('Subgrupo eliminado correctamente.');
 
@@ -158,8 +198,6 @@ class _GroupViewState extends State<GroupView> {
                     .pop(); // Cierra el diálogo si no se confirma la eliminación
               }
             }
-
-            
           },
           declineLabel: 'Eliminar',
         );
@@ -204,8 +242,13 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<int> getFirstId() async {
-    final data =
-        await DatabaseService.instance.getSubgruposByGrupo(widget.groupId);
+    late var data;
+    if (kIsWeb) {
+      data = await webDatabaseService.getSubgruposByGrupo(widget.groupId);
+    } else {
+      data = await DatabaseService.instance.getSubgruposByGrupo(widget.groupId);
+    }
+
     if (data.isEmpty) {
       return 0;
     } else {
@@ -227,13 +270,24 @@ class _GroupViewState extends State<GroupView> {
         cantidad != null) {
       final total = precioUnitario * cantidad;
 
-      await DatabaseService.instance.createProducto(
-          concepto: concepto,
-          tipoUnidad: unidad,
-          precioUnitario: precioUnitario,
-          cantidad: cantidad.toInt(),
-          importeTotal: total,
-          subgrupoId: widget.subGroupId);
+      if (kIsWeb) {
+        await webDatabaseService.createProducto(
+            concepto: concepto,
+            tipoUnidad: unidad,
+            precioUnitario: precioUnitario,
+            cantidad: cantidad.toInt(),
+            importeTotal: total,
+            subgrupoId: widget.subGroupId);
+      } else {
+        await DatabaseService.instance.createProducto(
+            concepto: concepto,
+            tipoUnidad: unidad,
+            precioUnitario: precioUnitario,
+            cantidad: cantidad.toInt(),
+            importeTotal: total,
+            subgrupoId: widget.subGroupId);
+      }
+
       CustomSnackBar(context: context).show('Producto creado correctamente.');
       _reload();
       _addSubGroupController.clear();
@@ -404,14 +458,28 @@ class _GroupViewState extends State<GroupView> {
 
   Future<void> editProduct(Map<String, dynamic> product) async {
     print('Entre aqui');
-    final operation = await DatabaseService.instance.updateProducto(
-        id: product['id'],
-        concepto: product['concepto'],
-        tipoUnidad: product['tipo_unidad'],
-        precioUnitario: product['precio_unitario'],
-        cantidad: product['cantidad'].toInt(),
-        importeTotal: product['importe_total'],
-        subgrupoId: product['subgrupo_id']);
+    late var operation;
+
+    if (kIsWeb) {
+      operation = await webDatabaseService.updateProducto(
+          id: product['id'],
+          concepto: product['concepto'],
+          tipoUnidad: product['tipo_unidad'],
+          precioUnitario: product['precio_unitario'],
+          cantidad: product['cantidad'].toInt(),
+          importeTotal: product['importe_total'],
+          subgrupoId: product['subgrupo_id']);
+    } else {
+      operation = await DatabaseService.instance.updateProducto(
+          id: product['id'],
+          concepto: product['concepto'],
+          tipoUnidad: product['tipo_unidad'],
+          precioUnitario: product['precio_unitario'],
+          cantidad: product['cantidad'].toInt(),
+          importeTotal: product['importe_total'],
+          subgrupoId: product['subgrupo_id']);
+    }
+
     if (operation == 1) {
       CustomSnackBar(context: context).show('Producto editado correctamente.');
     } else {
@@ -612,7 +680,6 @@ class _GroupViewState extends State<GroupView> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
@@ -630,8 +697,6 @@ class _GroupViewState extends State<GroupView> {
               children: [
                 Container(
                   width: 18.4 * vw,
-                  
-                  
                   child: Column(
                     children: [
                       Container(
@@ -642,10 +707,9 @@ class _GroupViewState extends State<GroupView> {
                             Text(
                               'PROPUESTAS',
                               style: TextStyle(
-                                fontSize: 1.6 * vw,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).primaryColor
-                              ),
+                                  fontSize: 1.6 * vw,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).primaryColor),
                             ),
                             GestureDetector(
                               onTap: _showAddGroupDialog,
@@ -688,8 +752,6 @@ class _GroupViewState extends State<GroupView> {
                             );
                           }
                           final subGroups = snapshot.data!;
-                          
-                          
 
                           return Container(
                             width: double.maxFinite,
@@ -728,14 +790,14 @@ class _GroupViewState extends State<GroupView> {
                         width: 75.1 * vw,
                         padding: EdgeInsets.only(left: 1.5 * vw),
                         decoration: BoxDecoration(
-                      border: Border(
-                          left: BorderSide(
-                              width: 0.1 * vw, color: Theme.of(context).shadowColor))),
+                            border: Border(
+                                left: BorderSide(
+                                    width: 0.1 * vw,
+                                    color: Theme.of(context).shadowColor))),
                         child: FutureBuilder<Map<String, dynamic>>(
                           future: _futureProducts,
                           builder: (context,
-                              AsyncSnapshot<Map<String, dynamic>>
-                                  snapshot) {
+                              AsyncSnapshot<Map<String, dynamic>> snapshot) {
                             if (!snapshot.hasData) {
                               return SizedBox();
                             }
@@ -748,38 +810,41 @@ class _GroupViewState extends State<GroupView> {
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'PRODUCTOS',
                                             style: TextStyle(
-                                              fontSize: 1.6 * vw,
-                                              fontWeight: FontWeight.w600,
-                                              color: Theme.of(context).primaryColor
-                                            ),
+                                                fontSize: 1.6 * vw,
+                                                fontWeight: FontWeight.w600,
+                                                color: Theme.of(context)
+                                                    .primaryColor),
                                           ),
-                                          SizedBox(height: 0.25*vw),
+                                          SizedBox(height: 0.25 * vw),
                                           Row(
                                             children: [
                                               Text(
                                                 'Total:',
                                                 style: TextStyle(
-                                                  fontSize: 1.6 * vw,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: Theme.of(context).primaryColor
-                                                ),
+                                                    fontSize: 1.6 * vw,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: Theme.of(context)
+                                                        .primaryColor),
                                               ),
-                                              SizedBox(width: 0.5*vw),
+                                              SizedBox(width: 0.5 * vw),
                                               Text(
-                                                Formatter.money(data['total_importe']),
+                                                Formatter.money(
+                                                    data['total_importe']),
                                                 style: TextStyle(
-                                                  fontSize: 1.6 * vw,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Theme.of(context).primaryColor
-                                                ),
+                                                    fontSize: 1.6 * vw,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Theme.of(context)
+                                                        .primaryColor),
                                               ),
                                             ],
                                           )
@@ -800,11 +865,12 @@ class _GroupViewState extends State<GroupView> {
                                               : SizedBox(),
                                           !isOpen
                                               ? BoxButton(
-                                                  onPressed: _showAddProductDialog,
+                                                  onPressed:
+                                                      _showAddProductDialog,
                                                   label: 'Añadir producto',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
-                                                      isFocused: false,
+                                                  isFocused: false,
                                                 )
                                               : SizedBox(),
                                           isOpen
@@ -818,7 +884,7 @@ class _GroupViewState extends State<GroupView> {
                                                   label: '  X  ',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
-                                                      isFocused: false,
+                                                  isFocused: false,
                                                 )
                                               : SizedBox(),
                                           isOpen
@@ -858,7 +924,7 @@ class _GroupViewState extends State<GroupView> {
                                                   label: 'Seleccionar todos',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
-                                                      isFocused: false,
+                                                  isFocused: false,
                                                 )
                                               : SizedBox(),
                                           isOpen
@@ -882,26 +948,39 @@ class _GroupViewState extends State<GroupView> {
                                                                 pickedItems
                                                                     .length;
                                                             i++) {
-                                                          DatabaseService
-                                                              .instance
-                                                              .updateProductoSeleccion(
-                                                                  pickedItems[
-                                                                      i],
-                                                                  true);
+                                                          if (kIsWeb) {
+                                                            webDatabaseService
+                                                                .updateProductoSeleccion(
+                                                                    pickedItems[
+                                                                        i],
+                                                                    true);
+                                                          } else {
+                                                            DatabaseService
+                                                                .instance
+                                                                .updateProductoSeleccion(
+                                                                    pickedItems[
+                                                                        i],
+                                                                    true);
+                                                          }
                                                         }
                                                         setState(() {
                                                           pickedItems.clear();
                                                           isOpen = false;
                                                         });
                                                         _reload();
-                                                        Routes(context).goTo(GroupView(groupId: widget.groupId, subGroupId: widget.subGroupId));
+                                                        Routes(context).goTo(
+                                                            GroupView(
+                                                                groupId: widget
+                                                                    .groupId,
+                                                                subGroupId: widget
+                                                                    .subGroupId));
                                                       }
                                                     }
                                                   },
                                                   label: 'Aceptar y enviar',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
-                                                      isFocused: false,
+                                                  isFocused: false,
                                                 )
                                               : SizedBox(),
                                           isOpen
@@ -925,11 +1004,18 @@ class _GroupViewState extends State<GroupView> {
                                                                 pickedItems
                                                                     .length;
                                                             i++) {
-                                                          DatabaseService
-                                                              .instance
-                                                              .deleteProducto(
-                                                                  pickedItems[
-                                                                      i]);
+                                                          if (kIsWeb) {
+                                                            webDatabaseService
+                                                                .deleteProducto(
+                                                                    pickedItems[
+                                                                        i]);
+                                                          } else {
+                                                            DatabaseService
+                                                                .instance
+                                                                .deleteProducto(
+                                                                    pickedItems[
+                                                                        i]);
+                                                          }
                                                         }
                                                         setState(() {
                                                           pickedItems.clear();
@@ -943,7 +1029,7 @@ class _GroupViewState extends State<GroupView> {
                                                       'Eliminar de la propuesta',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
-                                                      isFocused: false,
+                                                  isFocused: false,
                                                 )
                                               : SizedBox(),
                                         ],
@@ -1017,7 +1103,7 @@ class _GroupViewState extends State<GroupView> {
                       ),
               ],
             ),
-            SizedBox(height: 1.5*vw),
+            SizedBox(height: 1.5 * vw),
           ],
         ),
       ),
