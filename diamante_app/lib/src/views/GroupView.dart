@@ -138,7 +138,7 @@ class _GroupViewState extends State<GroupView> {
       context: context,
       builder: (context) {
         return SingleInputDialog(
-          title: 'Editar grupo',
+          title: 'Editar subgrupo',
           inputController: editController,
           inputHint: 'Nombre',
           inputValue: currentName,
@@ -722,7 +722,7 @@ class _GroupViewState extends State<GroupView> {
                                   ),
                                 ),
                                 child: Center(
-                                  child: Text('Añadir'),
+                                  child: Text('Añadir', style: TextStyle(fontSize: 1.2*vw, color: Theme.of(context).primaryColor,),),
                                 ),
                               ),
                             ),

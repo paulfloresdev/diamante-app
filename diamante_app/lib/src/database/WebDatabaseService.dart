@@ -8,12 +8,24 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 class WebDatabaseService {
   late Database _database;
 
-  /// Método para inicializar la base de datos
   Future<void> initializeDatabase() async {
-    try{
-      var databaseFactory = databaseFactoryFfiWeb;
+    try {
+      // Configuración para evitar conflictos con el Service Worker
+      var swOptions = SqfliteFfiWebOptions(
+        sharedWorkerUri: Uri.parse('sqflite_sw.js'), // Ruta al archivo Worker de sqflite
+        forceAsBasicWorker: true, // Usar un Web Worker básico
+      );
 
-      // Crear o abrir la base de datos
+      // Inicia el Worker
+      await sqfliteFfiWebStartSharedWorker(swOptions);
+
+      // Carga el archivo `sqlite3.wasm`
+      await sqfliteFfiWebLoadSqlite3Wasm(swOptions);
+
+      // Usa la fábrica sin Workers
+      var databaseFactory = databaseFactoryFfiWebNoWebWorker;
+
+      // Abre la base de datos
       _database = await databaseFactory.openDatabase(
         'app_database.db',
         options: OpenDatabaseOptions(
@@ -67,35 +79,47 @@ class WebDatabaseService {
                 telefono TEXT              -- Nuevo campo teléfono
               )
             ''');
-          },
-          onUpgrade: (db, oldVersion, newVersion) async {
-            print('Actualizando base de datos de versión $oldVersion a $newVersion');
-          },
-          onDowngrade: (db, oldVersion, newVersion) async {
-            print('Rebajando base de datos de versión $oldVersion a $newVersion');
+
+            print('Tablas creadas correctamente y valores iniciales insertados.');
           },
         ),
       );
 
       print('Base de datos inicializada correctamente.');
-    }catch(e, stackTrace){
+    } catch (e, stackTrace) {
       print('Error al inicializar la base de datos: $e');
       print(stackTrace);
     }
   }
 
+  Future<List<Map<String, Object?>>> getGrupos() async {
+    return await _database.query('grupos');
+  }
+
+  Future<void> addGrupo(String nombre) async {
+    await _database.insert('grupos', {'nombre': nombre});
+    print('Grupo agregado: $nombre');
+  }
+
   /// Método para insertar datos en la tabla Test
   Future<int> insertTestValue() async {
-    return await _database.insert('configs', {
-      'nombre_cliente': 'Cliente Predeterminado',
-      'moneda': 'MXN',
-      'iva_porcentaje': 16.0,
-      'nombre_empresa': 'Diamante Cabo San Lucas, S. de R.L. de C.V.',
-      'domicilio':
-          'Cabo San Lucas, Baja California Sur, México.', // Valor para domicilio
-      'cp': '12345', // Valor para código postal
-      'telefono': '1234567890', // Valor para teléfono
-    });
+    try{
+      var result = await _database.insert('configs', {
+        'nombre_cliente': 'Cliente Predeterminado',
+        'moneda': 'MXN',
+        'iva_porcentaje': 16.0,
+        'nombre_empresa': 'Diamante Cabo San Lucas, S. de R.L. de C.V.',
+        'domicilio':
+            'Cabo San Lucas, Baja California Sur, México.', // Valor para domicilio
+        'cp': '12345', // Valor para código postal
+        'telefono': '1234567890', // Valor para teléfono
+      });
+      print('Valor insertado correctamente');
+      return result;
+    }catch(e){
+      print('Error al insertar el primer valor: $e');
+      return 0;
+    }
   }
 
   Future<String> exportToJson() async {
@@ -133,7 +157,12 @@ class WebDatabaseService {
 
   /// Método para obtener datos de la tabla Test
   Future<List<Map<String, dynamic>>> getTestValues() async {
-    return await _database.query('configs');
+    try{
+      return await _database.query('configs');
+    }catch(e){
+      print('Error al obtener los valores de prueba: $e');
+      return [];
+    }
   }
 
   Future<Map<String, dynamic>?> getConfigById(int id) async {

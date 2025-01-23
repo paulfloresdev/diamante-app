@@ -1,9 +1,9 @@
-import 'package:diamante_app/src/app.dart';
-import 'package:diamante_app/src/database/WebDatabaseService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Para usar kIsWeb
 import 'package:provider/provider.dart'; // Para usar Provider
 import 'package:shared_preferences/shared_preferences.dart'; // Para gestionar la primera ejecución
+import 'package:diamante_app/src/app.dart';
+import 'package:diamante_app/src/database/WebDatabaseService.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,16 +27,16 @@ void main() async {
     }
 
     var values = await webDatabaseService.getTestValues();
-    print('Valores en la base de datos: $values');
+    print('Valores iniciales en la base de datos: $values');
   }
 
   runApp(
     MultiProvider(
       providers: [
         if (kIsWeb)
-        Provider<WebDatabaseService>(
-          create: (_) => webDatabaseService!,
-        )
+          Provider<WebDatabaseService>(
+            create: (_) => webDatabaseService!,
+          )
         else
           Provider<WebDatabaseService>(
             create: (_) => throw UnimplementedError('WebDatabaseService no está disponible en esta plataforma'),
