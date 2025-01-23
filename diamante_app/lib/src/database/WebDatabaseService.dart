@@ -10,65 +10,78 @@ class WebDatabaseService {
 
   /// Método para inicializar la base de datos
   Future<void> initializeDatabase() async {
-    var databaseFactory = databaseFactoryFfiWeb;
+    try{
+      var databaseFactory = databaseFactoryFfiWeb;
 
-    // Crear o abrir la base de datos
-    _database = await databaseFactory.openDatabase(
-      'app_database.db',
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: (db, version) async {
-          // Crear las tablas necesarias
+      // Crear o abrir la base de datos
+      _database = await databaseFactory.openDatabase(
+        'app_database.db',
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (db, version) async {
+            // Crear las tablas necesarias
 
-          // Crear tabla de Grupos
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS grupos (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              nombre TEXT NOT NULL
-            )
-          ''');
+            // Crear tabla de Grupos
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS grupos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL
+              )
+            ''');
 
-          // Crear tabla de Subgrupos
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS subgrupos (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              nombre TEXT NOT NULL,
-              grupo_id INTEGER NOT NULL,
-              FOREIGN KEY (grupo_id) REFERENCES grupos (id) ON DELETE CASCADE
-            )
-          ''');
+            // Crear tabla de Subgrupos
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS subgrupos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                grupo_id INTEGER NOT NULL,
+                FOREIGN KEY (grupo_id) REFERENCES grupos (id) ON DELETE CASCADE
+              )
+            ''');
 
-          // Crear tabla de Productos
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS productos (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              concepto TEXT NOT NULL,
-              tipo_unidad TEXT NOT NULL,
-              precio_unitario REAL NOT NULL,
-              cantidad INTEGER NOT NULL,
-              importe_total REAL NOT NULL,
-              is_selected INTEGER NOT NULL DEFAULT 0,
-              subgrupo_id INTEGER NOT NULL,
-              FOREIGN KEY (subgrupo_id) REFERENCES subgrupos (id) ON DELETE CASCADE
-            )
-          ''');
+            // Crear tabla de Productos
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS productos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                concepto TEXT NOT NULL,
+                tipo_unidad TEXT NOT NULL,
+                precio_unitario REAL NOT NULL,
+                cantidad INTEGER NOT NULL,
+                importe_total REAL NOT NULL,
+                is_selected INTEGER NOT NULL DEFAULT 0,
+                subgrupo_id INTEGER NOT NULL,
+                FOREIGN KEY (subgrupo_id) REFERENCES subgrupos (id) ON DELETE CASCADE
+              )
+            ''');
 
-          // Crear tabla de Configs
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS configs (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              nombre_cliente TEXT NOT NULL,
-              moneda TEXT NOT NULL CHECK(moneda IN ('MXN', 'USD')),
-              iva_porcentaje REAL NOT NULL,
-              nombre_empresa TEXT,
-              domicilio TEXT,            -- Nuevo campo domicilio
-              cp TEXT,                   -- Nuevo campo código postal
-              telefono TEXT              -- Nuevo campo teléfono
-            )
-          ''');
-        },
-      ),
-    );
+            // Crear tabla de Configs
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS configs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre_cliente TEXT NOT NULL,
+                moneda TEXT NOT NULL CHECK(moneda IN ('MXN', 'USD')),
+                iva_porcentaje REAL NOT NULL,
+                nombre_empresa TEXT,
+                domicilio TEXT,            -- Nuevo campo domicilio
+                cp TEXT,                   -- Nuevo campo código postal
+                telefono TEXT              -- Nuevo campo teléfono
+              )
+            ''');
+          },
+          onUpgrade: (db, oldVersion, newVersion) async {
+            print('Actualizando base de datos de versión $oldVersion a $newVersion');
+          },
+          onDowngrade: (db, oldVersion, newVersion) async {
+            print('Rebajando base de datos de versión $oldVersion a $newVersion');
+          },
+        ),
+      );
+
+      print('Base de datos inicializada correctamente.');
+    }catch(e, stackTrace){
+      print('Error al inicializar la base de datos: $e');
+      print(stackTrace);
+    }
   }
 
   /// Método para insertar datos en la tabla Test
