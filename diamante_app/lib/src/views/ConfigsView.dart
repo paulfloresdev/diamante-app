@@ -46,7 +46,7 @@ class _ConfigsViewState extends State<ConfigsView> {
   late TextEditingController cpController;
   late TextEditingController telefonoController;
 
-  late String language;
+  String language = 'en';
 
   getLanguage() async {
     final prefs = await SharedPreferences.getInstance();

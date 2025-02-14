@@ -31,7 +31,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
   late var webDatabaseService;
   late var isLoading;
 
-  late String language;
+  String language = 'en';
 
   getLanguage() async {
     final prefs = await SharedPreferences.getInstance();

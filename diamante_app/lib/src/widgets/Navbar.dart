@@ -27,7 +27,7 @@ class _NavbarState extends State<Navbar> {
 
   final TextEditingController _addGroupController = TextEditingController();
   late Future<List<Map<String, dynamic>>> _futureGroups;
-  late String language;
+  String language = 'en';
 
   getLanguage() async {
     final prefs = await SharedPreferences.getInstance();
