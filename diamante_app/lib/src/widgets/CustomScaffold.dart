@@ -11,6 +11,7 @@ import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
@@ -30,17 +31,39 @@ class _CustomscaffoldState extends State<Customscaffold> {
   late var webDatabaseService;
   late var isLoading;
 
+  late String language;
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
+  toogleLanguage() async {
+    print('adentro');
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs.setString('language', language == 'en' ? 'es' : 'en');
+      print(language);
+    });
+    getLanguage();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getLanguage();
     isLoading = false;
-    webDatabaseService = kIsWeb ?
-        Provider.of<WebDatabaseService>(context, listen: false) : null;
+    webDatabaseService =
+        kIsWeb ? Provider.of<WebDatabaseService>(context, listen: false) : null;
   }
 
   Future<bool> _showDeleteConfirmationDialog(
-      {required BuildContext context ,required String title, required String subTitle}) async {
+      {required BuildContext context,
+      required String title,
+      required String subTitle}) async {
     return (await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
@@ -62,36 +85,35 @@ class _CustomscaffoldState extends State<Customscaffold> {
     var responsive = Responsive(context);
     double vw = responsive.viewportWidth;
 
-    if(isLoading){
+    if (isLoading) {
       return Scaffold(
-        backgroundColor: Theme.of(context).splashColor,
-        body: SizedBox(
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              FadeIn(
-                duration: const Duration(milliseconds: 2000),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 25 * vw,
-                  color: Theme.of(context).secondaryHeaderColor,
+          backgroundColor: Theme.of(context).splashColor,
+          body: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                FadeIn(
+                  duration: const Duration(milliseconds: 2000),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 20 * vw,
+                    color: Theme.of(context).secondaryHeaderColor,
+                  ),
                 ),
-              ),
-              SizedBox(height: 2.5*vw),
-              SizedBox(
-                width: 3 * vw, // Ajusta el ancho
-                height: 3 * vw, // Ajusta la altura
-                child: CircularProgressIndicator(
-                  strokeWidth: 0.6 * vw, // Ajusta el grosor
-                  color: Theme.of(context).shadowColor,
-                ),
-              )
-
-            ],
-          ),
-        ));
+                SizedBox(height: 2.5 * vw),
+                SizedBox(
+                  width: 3 * vw, // Ajusta el ancho
+                  height: 3 * vw, // Ajusta la altura
+                  child: CircularProgressIndicator(
+                    strokeWidth: 0.6 * vw, // Ajusta el grosor
+                    color: Theme.of(context).shadowColor,
+                  ),
+                )
+              ],
+            ),
+          ));
     }
 
     return Scaffold(
@@ -108,63 +130,75 @@ class _CustomscaffoldState extends State<Customscaffold> {
               children: [
                 Image.asset('assets/images/logo.png',
                     color: Theme.of(context).secondaryHeaderColor,
-                    width: 7.5 * vw),
+                    width: 4 * vw),
                 SizedBox(width: 1.25 * vw),
-                widget.groupId == 0 ? CircularButton(
-                  onPressed: () async {
-                    //AQUÍ
-                    if(kIsWeb){
-                      Webdatabasefiles().exportDatabase(context: context);
-                    }else{
-                      DatabaseFiles().exportDatabase(context: context);
-                    }
-                  },
-                  icon: Icons.arrow_upward_rounded,
-                ) : SizedBox(),
+                widget.groupId == 0
+                    ? CircularButton(
+                        onPressed: () async {
+                          //AQUÍ
+                          if (kIsWeb) {
+                            Webdatabasefiles().exportDatabase(context: context);
+                          } else {
+                            DatabaseFiles().exportDatabase(context: context);
+                          }
+                        },
+                        icon: Icons.arrow_upward_rounded,
+                      )
+                    : SizedBox(),
                 SizedBox(width: 0.25 * vw),
-                widget.groupId == 0 ? CircularButton(
-                  onPressed: () async {
-                    if(await _showDeleteConfirmationDialog(context: context, title: 'Reemplazar base de datos', subTitle: '¿Estás seguro de reemplazar la base de datos?, todos actuales se perderán.')){
-                      setState(() {
-                        isLoading = true;
-                      });
-                      if(kIsWeb){
-                        await Webdatabasefiles().importDatabase(context);
-                      }else{
-                        await DatabaseFiles().importDatabase(context);
-                      }
-                      CustomSnackBar(context: context).show('Base de datos reemplazada exitosamente.');
-                      setState(() {
-                        isLoading = false;
-                      });
-                    }else{
-                      print('No se reemplazará');
-                    }
-                    Routes(context).goTo(OverView());
-                  },
-                  icon: Icons.arrow_downward_rounded,
-                ) : SizedBox(),
+                widget.groupId == 0
+                    ? CircularButton(
+                        onPressed: () async {
+                          if (await _showDeleteConfirmationDialog(
+                              context: context,
+                              title: 'Reemplazar base de datos',
+                              subTitle:
+                                  '¿Estás seguro de reemplazar la base de datos?, todos actuales se perderán.')) {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            if (kIsWeb) {
+                              await Webdatabasefiles().importDatabase(context);
+                            } else {
+                              await DatabaseFiles().importDatabase(context);
+                            }
+                            CustomSnackBar(context: context).show(
+                                'Base de datos reemplazada exitosamente.');
+                            setState(() {
+                              isLoading = false;
+                            });
+                          } else {
+                            print('No se reemplazará');
+                          }
+                          Routes(context).goTo(OverView());
+                        },
+                        icon: Icons.arrow_downward_rounded,
+                      )
+                    : SizedBox(),
                 SizedBox(width: 0.25 * vw),
-                widget.groupId == 0 ? CircularButton(
-                  onPressed: () async {
-                    Map<String, dynamic>? data = kIsWeb
-                        ? await webDatabaseService.getConfigById(1)
-                        : await DatabaseService.instance.getConfigById(1);
+                widget.groupId == 0
+                    ? CircularButton(
+                        onPressed: () async {
+                          Map<String, dynamic>? data = kIsWeb
+                              ? await webDatabaseService.getConfigById(1)
+                              : await DatabaseService.instance.getConfigById(1);
 
-                    if (data != {}) {
-                      Routes(context).goTo(ConfigsView(
-                          nombreCliente: data!['nombre_cliente'],
-                          moneda: data!['moneda'],
-                          ivaPorcentaje: data!['iva_porcentaje'],
-                          nombreEmpresa: data!['nombre_empresa'],
-                          domicilio: data!['domicilio'],
-                          cp: data!['cp'],
-                          telefono: data!['telefono']));
-                    }
-                  },
-                  icon: Icons.settings_outlined,
-                ) : SizedBox(),
+                          if (data != {}) {
+                            Routes(context).goTo(ConfigsView(
+                                nombreCliente: data!['nombre_cliente'],
+                                moneda: data!['moneda'],
+                                ivaPorcentaje: data!['iva_porcentaje'],
+                                nombreEmpresa: data!['nombre_empresa'],
+                                domicilio: data!['domicilio'],
+                                cp: data!['cp'],
+                                telefono: data!['telefono']));
+                          }
+                        },
+                        icon: Icons.settings_outlined,
+                      )
+                    : SizedBox(),
                 SizedBox(width: 0.25 * vw),
+
                 /*CircularButton(
                     onPressed: () async {
                       var configData =
@@ -176,11 +210,11 @@ class _CustomscaffoldState extends State<Customscaffold> {
                       var iva = configData!['iva_porcentaje'] / 100;
                       var ivaValor = subtotal * iva;
                       var total = subtotal + ivaValor;
-
+          
                       List<Map<String, dynamic>> contentTable = [
                         {'type': 'header'}
                       ];
-
+          
                       for (int i = 0; i < groups.length; i++) {
                         contentTable.add({
                           'type': 'titles',
@@ -202,7 +236,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
                           'sumatoria': groups[i]['sumatoria'],
                         });
                       }
-
+          
                       contentTable.add({
                         'type': 'subtotal',
                         'label': 'Subtotal:',
@@ -221,7 +255,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
                       contentTable.add({
                         'type': 'signature',
                       });
-
+          
                       var chunks = [];
                       int chunkSize = 14;
                       for (var i = 0; i < contentTable.length; i += chunkSize) {
@@ -231,12 +265,12 @@ class _CustomscaffoldState extends State<Customscaffold> {
                                 ? contentTable.length
                                 : i + chunkSize));
                       }
-
+          
                       print('Cantidad de chunks: ${chunks.length}');
                       for (int i = 0; i < chunks.length; i++) {
                         print('Chunk ${i + 1}: ${chunks[i].length} items');
                       }
-
+          
                       Routes(context).goTo(PdfWithSignature(
                         configData: configData,
                         contentTable: contentTable,
@@ -248,7 +282,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
             ),
           ),
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(9.6 * vw),
+            preferredSize: Size.fromHeight(8.5 * vw),
             child: Navbar(
               groupId: widget.groupId,
             ),

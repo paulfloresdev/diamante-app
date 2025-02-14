@@ -10,11 +10,18 @@ class BoxButton extends StatefulWidget {
   final double? width;
   final EdgeInsetsGeometry? margin;
   final double? fontSize;
-  const BoxButton({super.key, required this.label, required this.onPressed, required this.isFocused, this.onLongPress, this.width, this.margin, this.fontSize});
+  const BoxButton(
+      {super.key,
+      required this.label,
+      required this.onPressed,
+      required this.isFocused,
+      this.onLongPress,
+      this.width,
+      this.margin,
+      this.fontSize});
 
   @override
   State<BoxButton> createState() => _BoxButtonState();
-  
 }
 
 class _BoxButtonState extends State<BoxButton> {
@@ -22,26 +29,33 @@ class _BoxButtonState extends State<BoxButton> {
   Widget build(BuildContext context) {
     var responsive = Responsive(context);
     double vw = responsive.viewportWidth;
-    
+
     return GestureDetector(
       onTap: widget.onPressed,
       onLongPress: widget.onLongPress,
       child: Container(
         width: widget.width,
-        height: 5*vw,
-        padding: EdgeInsets.all(1*vw),
+        height: 3.5 * vw,
+        padding: EdgeInsets.all(1 * vw),
         margin: widget.margin,
         decoration: BoxDecoration(
-          border: Border.all(width: 0.1*vw, color: widget.isFocused ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8) : Theme.of(context).primaryColor),
-          color: widget.isFocused ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8) : Theme.of(context).splashColor
-        ),
+            border: Border.all(
+                width: 0.1 * vw,
+                color: widget.isFocused
+                    ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8)
+                    : Theme.of(context).primaryColor),
+            color: widget.isFocused
+                ? Theme.of(context).secondaryHeaderColor.withOpacity(0.8)
+                : Theme.of(context).splashColor),
         child: Center(
           child: Text(
             widget.label,
             style: TextStyle(
-              fontSize: widget.fontSize ?? 1.2*vw,
+              fontSize: widget.fontSize ?? 1 * vw,
               fontWeight: FontWeight.w400,
-              color: widget.isFocused ? Theme.of(context).splashColor : Theme.of(context).primaryColor,
+              color: widget.isFocused
+                  ? Theme.of(context).splashColor
+                  : Theme.of(context).primaryColor,
             ),
           ),
         ),

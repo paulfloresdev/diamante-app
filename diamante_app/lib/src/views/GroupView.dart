@@ -7,6 +7,7 @@ import 'package:diamante_app/src/widgets/ProductCard.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/DatabaseService.dart';
 import '../database/WebDatabaseService.dart';
@@ -39,11 +40,21 @@ class _GroupViewState extends State<GroupView> {
   final List<int> pickedItems = [];
   bool isOpen = false;
 
+  String language = 'en'; // Asignar un valor predeterminado para evitar errores
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    webDatabaseService = kIsWeb ? 
-        Provider.of<WebDatabaseService>(context, listen: false) : null;
+    getLanguage();
+    webDatabaseService =
+        kIsWeb ? Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
   }
 
@@ -85,14 +96,17 @@ class _GroupViewState extends State<GroupView> {
             .createSubgrupo(subGroupName, widget.groupId);
       }
 
-      CustomSnackBar(context: context).show('Subgrupo creado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Subgroup created successfully.'
+          : 'Subgrupo creado correctamente.');
       _reload();
       _autoSelect();
       _addSubGroupController.clear();
       Navigator.of(context).pop(); // Cierra el diálogo
     } else {
-      CustomSnackBar(context: context)
-          .show('El nombre del subgrupo no puede estar vacío.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Subgroup name can´t be empty.'
+          : 'El nombre del subgrupo no puede estar vacío.');
     }
   }
 
@@ -101,11 +115,11 @@ class _GroupViewState extends State<GroupView> {
       context: context,
       builder: (context) {
         return SingleInputDialog(
-          title: 'Nuevo subgrupo',
+          title: language == 'en' ? 'New subgroup' : 'Nuevo subgrupo',
           inputController: _addSubGroupController,
-          inputHint: 'Nombre',
+          inputHint: language == 'en' ? 'Name' : 'Nombre',
           onConfirm: addSubGroup,
-          confirmLabel: 'Guardar',
+          confirmLabel: language == 'en' ? 'Save' : 'Guardar',
         );
       },
     );
@@ -120,13 +134,15 @@ class _GroupViewState extends State<GroupView> {
             .updateSubgrupo(subgroupId, newSubGroupName);
       }
 
-      CustomSnackBar(context: context)
-          .show('Subgrupo actualizado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Subgroup updated successfully.'
+          : 'Subgrupo actualizado correctamente.');
       _reload(); // Recarga los grupos.
       Navigator.of(context).pop(); // Cierra el diálogo.
     } else {
-      CustomSnackBar(context: context)
-          .show('El nombre del subgrupo no puede estar vacío.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Subgroup name can´t be empty.'
+          : 'El nombre del subgrupo no puede estar vacío.');
     }
   }
 
@@ -138,12 +154,12 @@ class _GroupViewState extends State<GroupView> {
       context: context,
       builder: (context) {
         return SingleInputDialog(
-          title: 'Editar subgrupo',
+          title: language == 'en' ? 'Update subgroup' : 'Editar subgrupo',
           inputController: editController,
-          inputHint: 'Nombre',
+          inputHint: language == 'en' ? 'Name' : 'Nombre',
           inputValue: currentName,
           onConfirm: () => editSubGroup(editController.text.trim(), subgroupId),
-          confirmLabel: 'Guardar',
+          confirmLabel: language == 'en' ? 'Save' : 'Guardar',
           onDecline: () async {
             late var hasSelected;
 
@@ -156,13 +172,17 @@ class _GroupViewState extends State<GroupView> {
             }
 
             if (hasSelected) {
-              CustomSnackBar(context: context).show(
-                  'No es posible eliminar esta propuesta ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
+              CustomSnackBar(context: context).show(language == 'en'
+                  ? 'It is not possible to delete this proposal as it contains selected products. You can remove these products from your selection in the \'Quotation\' tab.'
+                  : 'No es posible eliminar esta propuesta ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
             } else {
               final bool confirmDelete = await _showDeleteConfirmationDialog(
-                  title: 'Eliminar subgrupo',
-                  subTitle:
-                      '¿Estás seguro que deseas eliminarlo?, todos los datos se perderán.');
+                  title: language == 'en'
+                      ? 'Delete subgroup'
+                      : 'Eliminar subgrupo',
+                  subTitle: language == 'en'
+                      ? 'Are you sure you want to delete it? All data will be permanently lost.'
+                      : '¿Estás seguro que deseas eliminarlo?, todos los datos se perderán.');
 
               if (confirmDelete) {
                 if (kIsWeb) {
@@ -171,8 +191,9 @@ class _GroupViewState extends State<GroupView> {
                   await DatabaseService.instance.deleteSubgrupo(subgroupId);
                 }
 
-                CustomSnackBar(context: context)
-                    .show('Subgrupo eliminado correctamente.');
+                CustomSnackBar(context: context).show(language == 'en'
+                    ? 'Subgroup deleted successfully.'
+                    : 'Subgrupo eliminado correctamente.');
 
                 // Cierra el diálogo inmediatamente
                 Navigator.of(context).pop();
@@ -199,7 +220,7 @@ class _GroupViewState extends State<GroupView> {
               }
             }
           },
-          declineLabel: 'Eliminar',
+          declineLabel: language == 'en' ? 'Delte' : 'Eliminar',
         );
       },
     );
@@ -213,9 +234,9 @@ class _GroupViewState extends State<GroupView> {
             return ConfirmDialog(
               title: title,
               subTitle: subTitle,
-              confirmLabel: 'Eliminar',
+              confirmLabel: language == 'en' ? 'Delete' : 'Eliminar',
               confirmColor: Colors.redAccent.shade700,
-              declineLabel: 'Cancelar',
+              declineLabel: language == 'en' ? 'Cancel' : 'Cancelar',
               declineColor: Colors.grey.shade700,
             );
           },
@@ -231,9 +252,9 @@ class _GroupViewState extends State<GroupView> {
             return ConfirmDialog(
               title: title,
               subTitle: subTitle,
-              confirmLabel: 'Aceptar',
+              confirmLabel: language == 'en' ? 'Confirm' : 'Aceptar',
               confirmColor: Theme.of(context).primaryColorDark,
-              declineLabel: 'Cancelar',
+              declineLabel: language == 'en' ? 'Cancel' : 'Cancelar',
               declineColor: Colors.grey.shade700,
             );
           },
@@ -288,13 +309,16 @@ class _GroupViewState extends State<GroupView> {
             subgrupoId: widget.subGroupId);
       }
 
-      CustomSnackBar(context: context).show('Producto creado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Product created successfully.'
+          : 'Producto creado correctamente.');
       _reload();
       _addSubGroupController.clear();
       Navigator.of(context).pop(); // Cierra el diálogo
     } else {
-      CustomSnackBar(context: context)
-          .show('El producto no puede tener campos vacíos.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Produc can´t have empty fields.'
+          : 'El producto no puede tener campos vacíos.');
     }
 
     _conceptoController.clear();
@@ -330,7 +354,7 @@ class _GroupViewState extends State<GroupView> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Nuevo producto',
+                            language == 'en' ? 'New product' : 'Nuevo producto',
                             textAlign: TextAlign.left,
                             style: TextStyle(
                                 fontSize: 1.2 * vw,
@@ -338,7 +362,7 @@ class _GroupViewState extends State<GroupView> {
                           ),
                           SizedBox(height: 1.5 * vw),
                           Text(
-                            'Concepto',
+                            language == 'en' ? 'Description' : 'Concepto',
                             textAlign: TextAlign.left,
                             style: TextStyle(
                                 fontSize: 1.2 * vw,
@@ -347,7 +371,9 @@ class _GroupViewState extends State<GroupView> {
                           SizedBox(height: 0.5 * vw),
                           Input(
                               controller: _conceptoController,
-                              hint: 'Concepto'),
+                              hint: language == 'en'
+                                  ? 'Description'
+                                  : 'Concepto'),
                           SizedBox(height: 1 * vw),
                           Container(
                             width: 49 * vw,
@@ -361,7 +387,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Tipo de unidad',
+                                        language == 'en'
+                                            ? 'Unit type'
+                                            : 'Tipo de unidad',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -370,7 +398,9 @@ class _GroupViewState extends State<GroupView> {
                                       SizedBox(height: 0.5 * vw),
                                       Input(
                                           controller: _unidadController,
-                                          hint: 'Tipo de unidad'),
+                                          hint: language == 'en'
+                                              ? 'Unit type'
+                                              : 'Tipo de unidad'),
                                     ],
                                   ),
                                 ),
@@ -381,7 +411,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Cantidad',
+                                        language == 'en'
+                                            ? 'Amount'
+                                            : 'Cantidad',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -390,7 +422,9 @@ class _GroupViewState extends State<GroupView> {
                                       SizedBox(height: 0.5 * vw),
                                       Input(
                                         controller: _cantidadController,
-                                        hint: 'Cantidad',
+                                        hint: language == 'en'
+                                            ? 'Amount'
+                                            : 'Cantidad',
                                         keyboardType: TextInputType.number,
                                         pattern: RegExp(r'[0-9]'),
                                       ),
@@ -404,7 +438,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Precio unitario',
+                                        language == 'en'
+                                            ? 'Unit price'
+                                            : 'Precio unitario',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -413,7 +449,9 @@ class _GroupViewState extends State<GroupView> {
                                       SizedBox(height: 0.5 * vw),
                                       Input(
                                         controller: _precioUnitarioController,
-                                        hint: 'Precio unitario',
+                                        hint: language == 'en'
+                                            ? 'Unit price'
+                                            : 'Precio unitario',
                                         keyboardType: TextInputType.number,
                                         pattern: RegExp(r'[0-9.]'),
                                       ),
@@ -434,7 +472,7 @@ class _GroupViewState extends State<GroupView> {
                               ),
                               child: Center(
                                 child: Text(
-                                  'Guardar',
+                                  language == 'en' ? 'Save' : 'Guardar',
                                   style: TextStyle(
                                     color: Theme.of(context).splashColor,
                                     fontSize: 1.2 * vw,
@@ -457,7 +495,6 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> editProduct(Map<String, dynamic> product) async {
-    print('Entre aqui');
     late var operation;
 
     if (kIsWeb) {
@@ -481,9 +518,12 @@ class _GroupViewState extends State<GroupView> {
     }
 
     if (operation == 1) {
-      CustomSnackBar(context: context).show('Producto editado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Product updated successfully.'
+          : 'Producto editado correctamente.');
     } else {
-      CustomSnackBar(context: context).show('Algo ha salido mal');
+      CustomSnackBar(context: context).show(
+          language == 'en' ? 'Something went wrong.' : 'Algo ha salido mal');
     }
     Navigator.of(context).pop();
     _reload();
@@ -525,7 +565,9 @@ class _GroupViewState extends State<GroupView> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Editar producto',
+                            language == 'en'
+                                ? 'Update product'
+                                : 'Editar producto',
                             textAlign: TextAlign.left,
                             style: TextStyle(
                                 fontSize: 1.2 * vw,
@@ -533,7 +575,7 @@ class _GroupViewState extends State<GroupView> {
                           ),
                           SizedBox(height: 1.5 * vw),
                           Text(
-                            'Concepto',
+                            language == 'en' ? 'Description' : 'Concepto',
                             textAlign: TextAlign.left,
                             style: TextStyle(
                                 fontSize: 1.2 * vw,
@@ -542,7 +584,9 @@ class _GroupViewState extends State<GroupView> {
                           SizedBox(height: 0.5 * vw),
                           Input(
                               controller: _conceptoEditController,
-                              hint: 'Concepto'),
+                              hint: language == 'en'
+                                  ? 'Description'
+                                  : 'Concepto'),
                           SizedBox(height: 1 * vw),
                           Container(
                             width: 49 * vw,
@@ -556,7 +600,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Tipo de unidad',
+                                        language == 'en'
+                                            ? 'Unit type'
+                                            : 'Tipo de unidad',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -565,7 +611,9 @@ class _GroupViewState extends State<GroupView> {
                                       SizedBox(height: 0.5 * vw),
                                       Input(
                                           controller: _unidadEditController,
-                                          hint: 'Tipo de unidad'),
+                                          hint: language == 'en'
+                                              ? 'Unit type'
+                                              : 'Tipo de unidad'),
                                     ],
                                   ),
                                 ),
@@ -576,7 +624,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Cantidad',
+                                        language == 'en'
+                                            ? 'Amount'
+                                            : 'Cantidad',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -585,7 +635,9 @@ class _GroupViewState extends State<GroupView> {
                                       SizedBox(height: 0.5 * vw),
                                       Input(
                                         controller: _cantidadEditController,
-                                        hint: 'Cantidad',
+                                        hint: language == 'en'
+                                            ? 'Amount'
+                                            : 'Cantidad',
                                         keyboardType: TextInputType.number,
                                         pattern: RegExp(r'[0-9]'),
                                       ),
@@ -599,7 +651,9 @@ class _GroupViewState extends State<GroupView> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'Precio unitario',
+                                        language == 'en'
+                                            ? 'Unit price'
+                                            : 'Precio unitario',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                             fontSize: 1.2 * vw,
@@ -609,7 +663,9 @@ class _GroupViewState extends State<GroupView> {
                                       Input(
                                         controller:
                                             _precioUnitarioEditController,
-                                        hint: 'Precio unitario',
+                                        hint: language == 'en'
+                                            ? 'Unit price'
+                                            : 'Precio unitario',
                                         keyboardType: TextInputType.number,
                                         pattern: RegExp(r'[0-9.]'),
                                       ),
@@ -646,8 +702,10 @@ class _GroupViewState extends State<GroupView> {
 
                                 editProduct(editedProduct);
                               } else {
-                                CustomSnackBar(context: context).show(
-                                    'Los campos del producto no pueden estar vacíos.');
+                                CustomSnackBar(context: context).show(language ==
+                                        'en'
+                                    ? 'Product fields can´t be empty.'
+                                    : 'Los campos del producto no pueden estar vacíos.');
                               }
                             },
                             child: Container(
@@ -658,7 +716,7 @@ class _GroupViewState extends State<GroupView> {
                               ),
                               child: Center(
                                 child: Text(
-                                  'Guardar',
+                                  language == 'en' ? 'Save' : 'Guardar',
                                   style: TextStyle(
                                     color: Theme.of(context).splashColor,
                                     fontSize: 1.2 * vw,
@@ -705,9 +763,9 @@ class _GroupViewState extends State<GroupView> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'PROPUESTAS',
+                              language == 'en' ? 'PROPOSALS' : 'PROPUESTAS',
                               style: TextStyle(
-                                  fontSize: 1.6 * vw,
+                                  fontSize: 1.1 * vw,
                                   fontWeight: FontWeight.w600,
                                   color: Theme.of(context).primaryColor),
                             ),
@@ -722,7 +780,13 @@ class _GroupViewState extends State<GroupView> {
                                   ),
                                 ),
                                 child: Center(
-                                  child: Text('Añadir', style: TextStyle(fontSize: 1.2*vw, color: Theme.of(context).primaryColor,),),
+                                  child: Text(
+                                    language == 'en' ? 'Add' : 'Añadir',
+                                    style: TextStyle(
+                                      fontSize: 1.1 * vw,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -743,9 +807,11 @@ class _GroupViewState extends State<GroupView> {
                               width: 18.4 * vw,
                               margin: EdgeInsets.only(top: 1.5 * vw),
                               child: Text(
-                                'No se encontraron propuestas.',
+                                language == 'en'
+                                    ? 'There isn´t proposals.'
+                                    : 'No se encontraron propuestas.',
                                 style: TextStyle(
-                                  fontSize: 1.2 * vw,
+                                  fontSize: 1.1 * vw,
                                   color: Colors.grey.shade700,
                                 ),
                               ),
@@ -818,9 +884,11 @@ class _GroupViewState extends State<GroupView> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'PRODUCTOS',
+                                            language == 'en'
+                                                ? 'PRODUCTS'
+                                                : 'PRODUCTOS',
                                             style: TextStyle(
-                                                fontSize: 1.6 * vw,
+                                                fontSize: 1.1 * vw,
                                                 fontWeight: FontWeight.w600,
                                                 color: Theme.of(context)
                                                     .primaryColor),
@@ -831,7 +899,7 @@ class _GroupViewState extends State<GroupView> {
                                               Text(
                                                 'Total:',
                                                 style: TextStyle(
-                                                    fontSize: 1.6 * vw,
+                                                    fontSize: 1.1 * vw,
                                                     fontWeight: FontWeight.w400,
                                                     color: Theme.of(context)
                                                         .primaryColor),
@@ -841,7 +909,7 @@ class _GroupViewState extends State<GroupView> {
                                                 Formatter.money(
                                                     data['total_importe']),
                                                 style: TextStyle(
-                                                    fontSize: 1.6 * vw,
+                                                    fontSize: 1.1 * vw,
                                                     fontWeight: FontWeight.w600,
                                                     color: Theme.of(context)
                                                         .primaryColor),
@@ -859,7 +927,9 @@ class _GroupViewState extends State<GroupView> {
                                                       isOpen = true;
                                                     });
                                                   },
-                                                  label: 'Seleccionar',
+                                                  label: language == 'en'
+                                                      ? 'Select'
+                                                      : 'Seleccionar',
                                                   isFocused: false,
                                                 )
                                               : SizedBox(),
@@ -867,7 +937,9 @@ class _GroupViewState extends State<GroupView> {
                                               ? BoxButton(
                                                   onPressed:
                                                       _showAddProductDialog,
-                                                  label: 'Añadir producto',
+                                                  label: language == 'en'
+                                                      ? 'Add product'
+                                                      : 'Añadir producto',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
                                                   isFocused: false,
@@ -921,7 +993,9 @@ class _GroupViewState extends State<GroupView> {
                                                       }
                                                     });
                                                   },
-                                                  label: 'Seleccionar todos',
+                                                  label: language == 'en'
+                                                      ? 'Select all'
+                                                      : 'Seleccionar todos',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
                                                   isFocused: false,
@@ -933,15 +1007,20 @@ class _GroupViewState extends State<GroupView> {
                                                     if (pickedItems.isEmpty) {
                                                       CustomSnackBar(
                                                               context: context)
-                                                          .show(
-                                                              'No hay productos seleccionados.');
+                                                          .show(language == 'en'
+                                                              ? 'There isn´t selected products.'
+                                                              : 'No hay productos seleccionados.');
                                                     } else {
                                                       final bool confirmSend =
                                                           await _showConfirmationDialog(
-                                                              title:
-                                                                  'Aceptar y enviar',
-                                                              subTitle:
-                                                                  'Este producto se enviará a la cotización final.');
+                                                              title: language ==
+                                                                      'en'
+                                                                  ? 'Confirm and send'
+                                                                  : 'Aceptar y enviar',
+                                                              subTitle: language ==
+                                                                      'en'
+                                                                  ? 'This product will be sent to the final quote.'
+                                                                  : 'Este producto se enviará a la cotización final.');
                                                       if (confirmSend) {
                                                         for (int i = 0;
                                                             i <
@@ -977,7 +1056,9 @@ class _GroupViewState extends State<GroupView> {
                                                       }
                                                     }
                                                   },
-                                                  label: 'Aceptar y enviar',
+                                                  label: language == 'en'
+                                                      ? 'Confirm and send'
+                                                      : 'Aceptar y enviar',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
                                                   isFocused: false,
@@ -989,15 +1070,20 @@ class _GroupViewState extends State<GroupView> {
                                                     if (pickedItems.isEmpty) {
                                                       CustomSnackBar(
                                                               context: context)
-                                                          .show(
-                                                              'No hay productos seleccionados.');
+                                                          .show(language == 'en'
+                                                              ? 'There isn´t selected products.'
+                                                              : 'No hay productos seleccionados.');
                                                     } else {
                                                       final bool confirmDelete =
                                                           await _showDeleteConfirmationDialog(
-                                                              title:
-                                                                  'Eliminar producto(s)',
-                                                              subTitle:
-                                                                  '¿Estás seguro que deseas eliminarlo(s)?, todos los datos se perderán.');
+                                                              title: language ==
+                                                                      'en'
+                                                                  ? 'Delete product(s)'
+                                                                  : 'Eliminar producto(s)',
+                                                              subTitle: language ==
+                                                                      'en'
+                                                                  ? 'Are you sure you want to delete it/them? All data will be lost.'
+                                                                  : '¿Estás seguro que deseas eliminarlo(s)?, todos los datos se perderán.');
                                                       if (confirmDelete) {
                                                         for (int i = 0;
                                                             i <
@@ -1025,8 +1111,9 @@ class _GroupViewState extends State<GroupView> {
                                                       }
                                                     }
                                                   },
-                                                  label:
-                                                      'Eliminar de la propuesta',
+                                                  label: language == 'en'
+                                                      ? 'Remove from proposal'
+                                                      : 'Eliminar de la propuesta',
                                                   margin: EdgeInsets.only(
                                                       left: 1.5 * vw),
                                                   isFocused: false,
@@ -1044,7 +1131,9 @@ class _GroupViewState extends State<GroupView> {
                                     children: [
                                       Text(
                                         isOpen
-                                            ? 'Productos seleccionados (${pickedItems.length})'
+                                            ? language == 'en'
+                                                ? 'Selected products (${pickedItems.length})'
+                                                : 'Productos seleccionados (${pickedItems.length})'
                                             : '',
                                       ),
                                     ],
@@ -1095,7 +1184,9 @@ class _GroupViewState extends State<GroupView> {
                                           },
                                         ),
                                       )
-                                    : Text('No se encontraron productos.'),
+                                    : Text(language == 'en'
+                                        ? 'There isn´t products.'
+                                        : 'No se encontraron productos.'),
                               ],
                             );
                           },

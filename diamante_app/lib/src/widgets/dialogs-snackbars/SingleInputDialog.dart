@@ -59,7 +59,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                         widget.title,
                         textAlign: TextAlign.left,
                         style: TextStyle(
-                            fontSize: 1.2 * vw, fontWeight: FontWeight.w600),
+                            fontSize: 1 * vw, fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: widget.subTitle != null ? 1 * vw : 0),
                       widget.subTitle != null
@@ -67,11 +67,11 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                               widget.subTitle ?? '',
                               textAlign: TextAlign.left,
                               style: TextStyle(
-                                  fontSize: 1.2 * vw,
+                                  fontSize: 1 * vw,
                                   fontWeight: FontWeight.w400),
                             )
                           : SizedBox(),
-                      SizedBox(height: 2 * vw),
+                      SizedBox(height: 1 * vw),
                       Input(
                           controller: widget.inputController,
                           hint: widget.inputHint),
@@ -80,7 +80,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                         onTap: widget.onConfirm,
                         child: Container(
                           width: double.infinity,
-                          height: 3.5 * vw,
+                          height: 2.75 * vw,
                           decoration: BoxDecoration(
                             color: Theme.of(context).primaryColor,
                           ),
@@ -89,7 +89,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                               widget.confirmLabel,
                               style: TextStyle(
                                 color: Theme.of(context).splashColor,
-                                fontSize: 1.2 * vw,
+                                fontSize: 1 * vw,
                               ),
                             ),
                           ),
@@ -105,7 +105,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                               onTap: widget.onDecline,
                               child: Container(
                                 width: double.infinity,
-                                height: 3.5 * vw,
+                                height: 3 * vw,
                                 decoration: BoxDecoration(
                                   color: Colors.transparent,
                                 ),
@@ -114,7 +114,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                                     widget.declineLabel ?? '',
                                     style: TextStyle(
                                       color: Colors.redAccent.shade700,
-                                      fontSize: 1.2 * vw,
+                                      fontSize: 1 * vw,
                                     ),
                                   ),
                                 ),

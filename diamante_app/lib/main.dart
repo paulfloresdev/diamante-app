@@ -21,9 +21,9 @@ void main() async {
     final isFirstRun = prefs.getBool('isFirstRun') ?? true;
 
     if (isFirstRun) {
-      // Insertar datos de prueba
       await webDatabaseService.insertTestValue();
       await prefs.setBool('isFirstRun', false);
+      await prefs.setString('language', 'en');
     }
 
     var values = await webDatabaseService.getTestValues();
@@ -39,7 +39,8 @@ void main() async {
           )
         else
           Provider<WebDatabaseService>(
-            create: (_) => throw UnimplementedError('WebDatabaseService no está disponible en esta plataforma'),
+            create: (_) => throw UnimplementedError(
+                'WebDatabaseService no está disponible en esta plataforma'),
           ),
       ],
       child: const MainApp(),

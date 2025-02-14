@@ -1,5 +1,6 @@
 import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/auxiliars/Responsive.dart';
 
@@ -26,10 +27,19 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   late bool isSelected;
+  String language = 'en'; // Asignar un valor predeterminado para evitar errores
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    getLanguage();
     isSelected = widget.product['is_selected'] == 1;
   }
 
@@ -64,7 +74,7 @@ class _ProductCardState extends State<ProductCard> {
                   Text(
                     widget.product['concepto'],
                     style: TextStyle(
-                      fontSize: 1.4 * vw,
+                      fontSize: 1.1 * vw,
                       fontWeight: FontWeight.w600,
                       color: isSelected
                           ? Theme.of(context).hintColor
@@ -77,7 +87,7 @@ class _ProductCardState extends State<ProductCard> {
                       Text(
                         widget.product['tipo_unidad'],
                         style: TextStyle(
-                          fontSize: 1.2 * vw,
+                          fontSize: 1 * vw,
                           fontWeight: FontWeight.w400,
                           color: isSelected
                               ? Theme.of(context).hintColor
@@ -102,9 +112,11 @@ class _ProductCardState extends State<ProductCard> {
                           child: widget.product['is_selected'] == 1
                               ? Center(
                                   child: Text(
-                                    'Agregado a la Cotización',
+                                    language == 'en'
+                                        ? 'Added to the quotation'
+                                        : 'Agregado a la cotización',
                                     style: TextStyle(
-                                      fontSize: 1.2 * vw,
+                                      fontSize: 1 * vw,
                                       fontWeight: FontWeight.w600,
                                       color: isSelected
                                           ? Theme.of(context).splashColor
@@ -125,7 +137,7 @@ class _ProductCardState extends State<ProductCard> {
                                     Formatter.money(
                                         widget.product['precio_unitario']),
                                     style: TextStyle(
-                                      fontSize: 1.2 * vw,
+                                      fontSize: 1 * vw,
                                       fontWeight: FontWeight.w400,
                                       color: isSelected
                                           ? Theme.of(context).hintColor
@@ -136,7 +148,7 @@ class _ProductCardState extends State<ProductCard> {
                                   Text(
                                     'x ${widget.product['cantidad']}',
                                     style: TextStyle(
-                                      fontSize: 1.4 * vw,
+                                      fontSize: 1.1 * vw,
                                       fontWeight: FontWeight.w600,
                                       color: isSelected
                                           ? Theme.of(context).hintColor
@@ -147,9 +159,10 @@ class _ProductCardState extends State<ProductCard> {
                               ),
                               SizedBox(height: 0.75 * vw),
                               Text(
-                                Formatter.money(widget.product['importe_total']),
+                                Formatter.money(
+                                    widget.product['importe_total']),
                                 style: TextStyle(
-                                  fontSize: 1.4 * vw,
+                                  fontSize: 1.1 * vw,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
                                       ? Theme.of(context).hintColor
@@ -170,8 +183,8 @@ class _ProductCardState extends State<ProductCard> {
               ? GestureDetector(
                   onTap: widget.onPick,
                   child: Container(
-                    width: 2.5 * vw,
-                    height: 2.5 * vw,
+                    width: 1.75 * vw,
+                    height: 1.75 * vw,
                     padding: EdgeInsets.all(0.25 * vw),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -197,6 +210,4 @@ class _ProductCardState extends State<ProductCard> {
       ),
     );
   }
-
-  
 }

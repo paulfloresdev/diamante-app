@@ -37,8 +37,8 @@ class _SubgroupOptionState extends State<SubgroupOption> {
   @override
   void initState() {
     super.initState();
-    webDatabaseService = kIsWeb ?
-        Provider.of<WebDatabaseService>(context, listen: false) : null;
+    webDatabaseService =
+        kIsWeb ? Provider.of<WebDatabaseService>(context, listen: false) : null;
     check();
   }
 
@@ -81,8 +81,8 @@ class _SubgroupOptionState extends State<SubgroupOption> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              width: 2.5 * vw,
-              height: 2.5 * vw,
+              width: 1.75 * vw,
+              height: 1.75 * vw,
               padding: EdgeInsets.all(0.25 * vw),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -113,7 +113,7 @@ class _SubgroupOptionState extends State<SubgroupOption> {
               child: Text(
                 widget.subGroup['nombre'],
                 style: TextStyle(
-                  fontSize: 1.3 * vw,
+                  fontSize: 1 * vw,
                   color: otherHaveSelected
                       ? Colors.grey.shade400
                       : Theme.of(context).primaryColor,
