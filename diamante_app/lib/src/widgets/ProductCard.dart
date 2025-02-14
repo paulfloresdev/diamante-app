@@ -1,5 +1,6 @@
 import 'package:diamante_app/src/models/auxiliars/Formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/auxiliars/Responsive.dart';
 
@@ -27,9 +28,19 @@ class ProductCard extends StatefulWidget {
 class _ProductCardState extends State<ProductCard> {
   late bool isSelected;
 
+  String language = 'en'; // Asignar un valor predeterminado para evitar errores
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    getLanguage();
     isSelected = widget.product['is_selected'] == 1;
   }
 
@@ -102,7 +113,9 @@ class _ProductCardState extends State<ProductCard> {
                           child: widget.product['is_selected'] == 1
                               ? Center(
                                   child: Text(
-                                    'Agregado a la Cotización',
+                                    language == 'en'
+                                        ? 'Added to the quotation'
+                                        : 'Agregado a la cotización',
                                     style: TextStyle(
                                       fontSize: 1.2 * vw,
                                       fontWeight: FontWeight.w600,

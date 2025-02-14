@@ -26,7 +26,7 @@ class DatabaseFiles {
         // Ruta de la carpeta Docs
         var docsDirectory = Directory('/storage/emulated/0/Documents');
 
-        final diamanteDirectory = Directory('${docsDirectory.path}/Diamante');
+        final diamanteDirectory = Directory('${docsDirectory.path}/RanchoSL');
 
         if(!diamanteDirectory.existsSync()){
           diamanteDirectory.createSync(recursive: true);

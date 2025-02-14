@@ -1,4 +1,5 @@
 import 'package:diamante_app/src/database/DatabaseService.dart';
+import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/widgets/Buttons/BoxButton.dart';
 import 'package:diamante_app/src/widgets/CustomScaffold.dart';
 import 'package:diamante_app/src/widgets/Input.dart';
@@ -6,6 +7,7 @@ import 'package:diamante_app/src/widgets/dialogs-snackbars/CustomSnackBar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Responsive.dart';
@@ -44,10 +46,30 @@ class _ConfigsViewState extends State<ConfigsView> {
   late TextEditingController cpController;
   late TextEditingController telefonoController;
 
+  String language = 'en';
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
+  toogleLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs.setString('language', language == 'en' ? 'es' : 'en');
+      language = prefs.getString('language') ?? 'en';
+    });
+    Routes(context).goTo(ConfigsView(nombreCliente: widget.nombreCliente, moneda: widget.moneda, ivaPorcentaje: widget.ivaPorcentaje, nombreEmpresa: widget.nombreEmpresa, domicilio: widget.domicilio, cp: widget.cp, telefono: widget.telefono));
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    getLanguage();
 
     webDatabaseService = kIsWeb ?
         Provider.of<WebDatabaseService>(context, listen: false) : null;
@@ -87,7 +109,7 @@ class _ConfigsViewState extends State<ConfigsView> {
           child: ListView(
             children: [
               Text(
-                'PANEL DE CONFIGURACIÓN',
+                language == 'en' ? 'CONFIGS' : 'PANEL DE CONFIGURACIÓN',
                 style: TextStyle(
                   fontSize: 1.4 * vw,
                   fontWeight: FontWeight.w600,
@@ -103,7 +125,9 @@ class _ConfigsViewState extends State<ConfigsView> {
                           .start, // Alinea el contenido a la izquierda
                       children: [
                         Text(
-                          'Nombre del cliente',
+                          language == 'en'
+                              ? 'Client name'
+                              : 'Nombre del cliente',
                           style: TextStyle(
                             fontSize: 1.3 * vw,
                             color: Theme.of(context).primaryColor,
@@ -112,7 +136,9 @@ class _ConfigsViewState extends State<ConfigsView> {
                         SizedBox(height: 0.5 * vw),
                         Input(
                             controller: nombreClienteController,
-                            hint: 'Nombre del cliente'),
+                            hint: language == 'en'
+                                ? 'Client name'
+                                : 'Nombre del cliente'),
                       ],
                     ),
                   ),
@@ -123,7 +149,9 @@ class _ConfigsViewState extends State<ConfigsView> {
                           .start, // Alinea el contenido a la izquierda
                       children: [
                         Text(
-                          'Nombre de la empresa',
+                          language == 'en'
+                              ? 'Company name'
+                              : 'Nombre de la empresa',
                           style: TextStyle(
                             fontSize: 1.3 * vw,
                             color: Theme.of(context).primaryColor,
@@ -132,7 +160,9 @@ class _ConfigsViewState extends State<ConfigsView> {
                         SizedBox(height: 0.5 * vw),
                         Input(
                             controller: nombreEmpresaController,
-                            hint: 'Nombre de la empresa'),
+                            hint: language == 'en'
+                              ? 'Company name'
+                              : 'Nombre de la empresa',),
                       ],
                     ),
                   ),
@@ -147,7 +177,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                           .start, // Alinea el contenido a la izquierda
                       children: [
                         Text(
-                          'Domicilio',
+                          language == 'en' ? 'Address' : 'Domicilio',
                           style: TextStyle(
                             fontSize: 1.3 * vw,
                             color: Theme.of(context).primaryColor,
@@ -155,7 +185,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                         ),
                         SizedBox(height: 0.5 * vw),
                         Input(
-                            controller: domicilioController, hint: 'Domicilio'),
+                            controller: domicilioController, hint: language == 'en' ? 'Address' : 'Domicilio',),
                       ],
                     ),
                   ),
@@ -169,7 +199,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                                 .start, // Alinea el contenido a la izquierda
                             children: [
                               Text(
-                                'Código postal',
+                                language == 'en' ? 'Zip code' : 'Código postal',
                                 style: TextStyle(
                                   fontSize: 1.3 * vw,
                                   color: Theme.of(context).primaryColor,
@@ -178,7 +208,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                               SizedBox(height: 0.5 * vw),
                               Input(
                                 controller: cpController,
-                                hint: 'C.P.',
+                                hint: language == 'en' ? 'Zip code' : 'Código postal',
                                 keyboardType: TextInputType.number,
                                 pattern: RegExp(r'[0-9]'),
                               ),
@@ -192,7 +222,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                                 .start, // Alinea el contenido a la izquierda
                             children: [
                               Text(
-                                'Teléfono',
+                                language == 'en' ? 'Phone number' : 'Teléfono',
                                 style: TextStyle(
                                   fontSize: 1.3 * vw,
                                   color: Theme.of(context).primaryColor,
@@ -201,7 +231,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                               SizedBox(height: 0.5 * vw),
                               Input(
                                 controller: telefonoController,
-                                hint: 'Teléfono',
+                                hint: language == 'en' ? 'Phone number' : 'Teléfono',
                                 keyboardType: TextInputType.number,
                                 pattern: RegExp(r'[0-9]'),
                               ),
@@ -252,7 +282,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Moneda',
+                        language == 'en' ? 'Currency' : 'Moneda',
                         style: TextStyle(
                           fontSize: 1.3 * vw,
                           color: Theme.of(context).primaryColor,
@@ -292,6 +322,56 @@ class _ConfigsViewState extends State<ConfigsView> {
                               SizedBox(width: 0.5 * vw),
                               Text(
                                 'MXN',
+                                style: TextStyle(
+                                  fontSize: 1.4 * vw,
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(width: 2.5 * vw),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        language == 'en' ? 'Language' : 'Lenguaje',
+                        style: TextStyle(
+                          fontSize: 1.3 * vw,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      SizedBox(height: 0.5 * vw),
+                      GestureDetector(
+                        onTap: toogleLanguage,
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Row(
+                            children: [
+                              Text(
+                                'English',
+                                style: TextStyle(
+                                  fontSize: 1.4 * vw,
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 0.5 * vw),
+                              Icon(
+                                language == 'en'
+                                    ? Icons.toggle_off
+                                    : Icons.toggle_on,
+                                size: 5 * vw,
+                                color: Theme.of(context).secondaryHeaderColor,
+                              ),
+                              SizedBox(width: 0.5 * vw),
+                              Text(
+                                'Español',
                                 style: TextStyle(
                                   fontSize: 1.4 * vw,
                                   color: Theme.of(context).primaryColor,
@@ -366,7 +446,7 @@ class _ConfigsViewState extends State<ConfigsView> {
                   color: Theme.of(context).primaryColor,
                   child: Center(
                     child: Text(
-                      'Guardar',
+                      language == 'en' ? 'Save' : 'Guardar',
                       style: TextStyle(
                         fontSize: 1.2 * vw,
                         fontWeight: FontWeight.w400,

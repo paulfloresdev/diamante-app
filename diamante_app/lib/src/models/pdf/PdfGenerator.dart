@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signature/signature.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -42,10 +43,20 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
     exportBackgroundColor: Colors.white,
   );
 
+  String language = 'en'; // Asignar un valor predeterminado para evitar errores
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getLanguage();
     folio = generateUniqueFolio();
   }
 
@@ -84,172 +95,100 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
           p == p
               ? pw.Column(
                   children: [
-                    pw.Container(
-                      width: 550.8,
-                      padding: pw.EdgeInsets.all(6),
-                      decoration: pw.BoxDecoration(
-                        border: pw.Border.all(
-                            color: PdfColor(210 / 255, 210 / 255, 220 / 255),
-                            width: 1.5),
-                      ),
-                      child: pw.Row(
-                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Container(
-                              width: 294,
-                              child: pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  children: [
-                                    pw.Row(children: [
-                                      pw.Text(
-                                        'Cliente:',
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.bold),
-                                      ),
-                                      pw.SizedBox(width: 5),
-                                      pw.Text(
-                                        widget.configData!['nombre_cliente'],
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.normal),
-                                      ),
-                                    ]),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(children: [
-                                      pw.Text(
-                                        'Fecha:',
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.bold),
-                                      ),
-                                      pw.SizedBox(width: 5),
-                                      pw.Text(
-                                        DateFormat('dd-MM-yyyy')
-                                            .format(DateTime.now()),
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.normal),
-                                      ),
-                                    ]),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(children: [
-                                      pw.Text(
-                                        'Folio:',
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.bold),
-                                      ),
-                                      pw.SizedBox(width: 5),
-                                      pw.Text(
-                                        folio,
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.normal),
-                                      ),
-                                    ]),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(children: [
-                                      pw.Text(
-                                        'Moneda:',
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.bold),
-                                      ),
-                                      pw.SizedBox(width: 5),
-                                      pw.Text(
-                                        widget.configData!['moneda'],
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.normal),
-                                      ),
-                                    ]),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(children: [
-                                      pw.Text(
-                                        'Empresa:',
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.bold),
-                                      ),
-                                      pw.SizedBox(width: 5),
-                                      pw.Text(
-                                        widget.configData!['nombre_empresa'],
-                                        textAlign: pw.TextAlign.start,
-                                        style: pw.TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: pw.FontWeight.normal),
-                                      ),
-                                    ]),
-                                    pw.SizedBox(height: 6),
-                                    pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.center,
-                                        children: [
-                                          pw.Image(
-                                            image,
-                                            width: 45,
-                                            height: 45,
-                                          ),
-                                          pw.Text(
-                                            'Firma del cliente',
-                                            style: pw.TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: pw.FontWeight.bold),
-                                          ),
-                                        ]),
-                                    pw.Container()
-                                  ]),
+                            pw.Text(
+                              widget.configData!['nombre_empresa'],
+                              style: pw.TextStyle(
+                                fontSize: 16,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
                             ),
-                            pw.SizedBox(width: 10),
-                            pw.Container(
-                              width: 234.8,
-                              child: pw.Column(
-                                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                                  children: [
-                                    pw.Image(
-                                      logoImage,
-                                      width: 112.9,
-                                      height: 112.9,
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Text(
-                                      widget.configData!['domicilio'],
-                                      textAlign: pw.TextAlign.end,
-                                      style: pw.TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: pw.FontWeight.normal),
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Text(
-                                      'C.P. ${widget.configData!['cp']}',
-                                      textAlign: pw.TextAlign.end,
-                                      style: pw.TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: pw.FontWeight.normal),
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Text(
-                                      Formatter.phoneNumber(
-                                          widget.configData!['telefono']),
-                                      textAlign: pw.TextAlign.end,
-                                      style: pw.TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: pw.FontWeight.normal),
-                                    ),
-                                  ]),
+                            pw.SizedBox(height: 8),
+                            pw.Text(
+                              '${widget.configData!['domicilio']} ${widget.configData!['cp']}',
+                              style: pw.TextStyle(
+                                fontSize: 11,
+                              ),
                             ),
-                          ]),
+                            pw.Text(
+                              Formatter.phoneNumber(
+                                  widget.configData!['telefono']),
+                              style: pw.TextStyle(
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.Image(
+                          logoImage,
+                          width: 90,
+                          height: 90,
+                        ),
+                      ],
                     ),
+                    pw.Column(
+                      children: [
+                        pw.Row(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text(
+                                  language == 'en' ? 'Date' : 'Fecha',
+                                  style: pw.TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                                pw.Text(
+                                  DateFormat('MM/dd/yyyy')
+                                      .format(DateTime.now()),
+                                  style: pw.TextStyle(
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                pw.SizedBox(height: 5.5),
+                                pw.Text(
+                                  language == 'en' ? 'Client' : 'Cliente',
+                                  style: pw.TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                                pw.Text(
+                                  widget.configData!['nombre_cliente'],
+                                  style: pw.TextStyle(
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Text(
+                              folio,
+                              style: pw.TextStyle(
+                                fontSize: 14,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Container(
+                      width: 550.8,
+                      height: 1.5,
+                      color: PdfColor(230 / 255, 230 / 255, 240 / 255),
+                    ),
+                    pw.SizedBox(height: 16),
                   ],
                 )
               : pw.SizedBox(),
@@ -257,21 +196,26 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
           pw.Column(
             children: chunk.map<pw.Widget>((item) {
               if (item['type'] == 'header') {
-                return pw.Container(
-                  width: 550.8,
-                  height: 30,
-                  color: PdfColor(111 / 255, 99 / 255, 94 / 255),
-                  child: pw.Center(
-                    child: pw.Text(
-                      item['label'],
-                      style: pw.TextStyle(
-                        fontSize: 12,
-                        color: PdfColor(1, 1, 1),
-                        fontWeight: pw.FontWeight.bold,
+                return pw.Column(children: [
+                  pw.Container(
+                    width: 550.8,
+                    height: 30,
+                    child: pw.Center(
+                      child: pw.Text(
+                        item['label'],
+                        style: pw.TextStyle(
+                          fontSize: 11,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                );
+                  pw.Container(
+                    width: 550.8,
+                    height: 1.5,
+                    color: PdfColor(230 / 255, 230 / 255, 240 / 255),
+                  ),
+                ]);
               }
               if (item['type'] == 'titles' || item['type'] == 'content') {
                 return pw.Column(children: [
@@ -293,10 +237,13 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                       child: pw.Text(
                                         textAlign: pw.TextAlign.left,
                                         item['type'] == 'titles'
-                                            ? 'Concepto'
+                                            ? language == 'en'
+                                                ? 'Description'
+                                                : 'Concepto'
                                             : item['concepto'],
                                         style: pw.TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10,
+                                          color: PdfColor(0.45, 0.45, 0.45),
                                           fontWeight: item['type'] == 'titles'
                                               ? pw.FontWeight.bold
                                               : pw.FontWeight.normal,
@@ -317,10 +264,13 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                       child: pw.Text(
                                         textAlign: pw.TextAlign.center,
                                         item['type'] == 'titles'
-                                            ? 'Unidad'
+                                            ? language == 'en'
+                                                ? 'Unit'
+                                                : 'Unidad'
                                             : item['tipo_unidad'],
                                         style: pw.TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10,
+                                          color: PdfColor(0.45, 0.45, 0.45),
                                           fontWeight: item['type'] == 'titles'
                                               ? pw.FontWeight.bold
                                               : pw.FontWeight.normal,
@@ -341,11 +291,14 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                       child: pw.Text(
                                         textAlign: pw.TextAlign.center,
                                         item['type'] == 'titles'
-                                            ? 'PU'
+                                            ? language == 'en'
+                                                ? 'UP'
+                                                : 'PU'
                                             : Formatter.money(
                                                 item['precio_unitario']),
                                         style: pw.TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10,
+                                          color: PdfColor(0.45, 0.45, 0.45),
                                           fontWeight: item['type'] == 'titles'
                                               ? pw.FontWeight.bold
                                               : pw.FontWeight.normal,
@@ -366,10 +319,13 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                       child: pw.Text(
                                         textAlign: pw.TextAlign.center,
                                         item['type'] == 'titles'
-                                            ? 'Cant'
+                                            ? language == 'en'
+                                                ? 'Amt'
+                                                : 'Cant'
                                             : item['cantidad'].toString(),
                                         style: pw.TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10,
+                                          color: PdfColor(0.45, 0.45, 0.45),
                                           fontWeight: item['type'] == 'titles'
                                               ? pw.FontWeight.bold
                                               : pw.FontWeight.normal,
@@ -394,7 +350,8 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                                             : Formatter.money(
                                                 item['importe_total']),
                                         style: pw.TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10,
+                                          color: PdfColor(0.45, 0.45, 0.45),
                                           fontWeight: item['type'] == 'titles'
                                               ? pw.FontWeight.bold
                                               : pw.FontWeight.normal,
@@ -421,36 +378,33 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                     padding: pw.EdgeInsets.symmetric(horizontal: 4.5),
                     color: item['subtype'] == 'resumen'
                         ? PdfColor(1, 1, 1)
-                        : PdfColor(230 / 255, 230 / 255, 240 / 255),
+                        : PdfColor(1, 1, 1),
                     child: pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(
                           item['nombre'],
                           style: pw.TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: item['subtype'] == 'resumen'
-                                ? pw.FontWeight.normal
+                                ? pw.FontWeight.bold
                                 : pw.FontWeight.bold,
                           ),
                         ),
                         pw.Text(
                           Formatter.money(item['sumatoria']),
                           style: pw.TextStyle(
-                            fontSize: 12,
-                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  item['subtype'] == 'resumen'
-                      ? pw.Container(
-                          width: 550.8,
-                          height: 1.5,
-                          color: PdfColor(210 / 255, 210 / 255, 220 / 255),
-                        )
-                      : pw.SizedBox(),
+                  pw.Container(
+                    width: 550.8,
+                    height: 1.5,
+                    color: PdfColor(230 / 255, 230 / 255, 240 / 255),
+                  )
                 ]);
               }
               if (item['type'] == 'signature') {
@@ -484,7 +438,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                       child: pw.Text(
                         'Nombre y firma del cliente',
                         style: pw.TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
@@ -507,10 +461,16 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
                     pw.Text(
-                      '${item['label']} ${Formatter.money(item['value'])}',
+                      '${item['label']} ',
                       style: pw.TextStyle(
-                        fontSize: item['type'] == 'total' ? 13.5 : 12,
+                        fontSize: item['type'] == 'total' ? 11 : 11,
                         fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.Text(
+                      Formatter.money(item['value']),
+                      style: pw.TextStyle(
+                        fontSize: item['type'] == 'total' ? 12 : 11,
                       ),
                     ),
                   ],
@@ -522,6 +482,392 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
       ));
     }
     ;
+    pdf.addPage(pw.Page(
+        pageFormat: PdfPageFormat(612, 792, marginAll: 30.6),
+        build: (context) => pw.Column(
+              children: [
+                language == 'en'
+                    ? pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                              'Prices shown above are in ${widget.configData!['moneda']} and the final exchange rate to consider for the payment will be determined on the date when Client authorizes this quote.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Prices include all importation fees and taxes.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'All quotes are valid only for 30 (Thirty) natural days, starting to count on the proposal date.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Authorization of the quote and its payment must be done in full during this valid period.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'If payment is not made during this valid period, conveyance date shall be automatically extended in the same number of days payment is late.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Client agrees with colors, finishes and pricing listed above.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Client accepts that any refund is only valid within the next 5 (Five) natural days after having paid the quote.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Client understands that each item is custom made and once work has begun, no changes, cancelations or returns will be allowed.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Client understands and acknowledges that prices shown in this quote are an estimate and may vary during the process of selection and until final project, according to client selections.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                            'Client will be notified of any changes in cost prior to them being incurred.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'PAYMENT INFORMATION:',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'MXN ACCOUNT',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary Bank: SANTANDER (MÉXICO) S.A.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Bank Address: 0302 CABO SAN LUCAS',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Swift Code: BMSXMXMMXXX',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary: RANCHO REAL ESTATE, S.A. DE C.V.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary Account: 014041655053161121',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'USD ACCOUNT',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary Bank: CITI COMMERCIAL BANK',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Bank Address: #653 740 LOMAS SANTA FE DR. SOLANA BEACH, CALIFORNIA. ZIP. 92075',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'ABA: 322 271 724',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Swift Code: CITIUS33',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary: RANCHO REAL ESTATE, S.A. DE C.V.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiary Account: 207849431',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'SIGN OF ACCEPTANCE',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Image(
+                            image,
+                            width: 90,
+                            height: 90,
+                          ),
+                          pw.Container(
+                            width: 180,
+                            height: 1.5,
+                            color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                          ),
+                          pw.Text(
+                            widget.configData!['nombre_cliente'],
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'SIGNED AND AGREED ON',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 6),
+                          pw.Text(
+                            DateFormat('MM/dd/yyyy').format(DateTime.now()),
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Container(
+                            width: 180,
+                            height: 1.5,
+                            color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                          ),
+                          pw.Text(
+                            'Date of acceptance',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      )
+                    : pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                              'Los precios mostrados arriba están en ${widget.configData!['moneda']} y la tasa de cambio final a considerar para el pago será determinada en la fecha en que el Cliente autorice esta cotización.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Los precios incluyen todas las tarifas de importación e impuestos.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Todas las cotizaciones son válidas únicamente por 30 (Treinta) días naturales, comenzando a contar desde la fecha de la propuesta.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'La autorización de la cotización y su pago deben realizarse en su totalidad durante este periodo válido.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'Si el pago no se realiza durante este periodo válido, la fecha de entrega se extenderá automáticamente por el mismo número de días que el pago esté retrasado.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'El Cliente acepta los colores, acabados y precios listados anteriormente.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'El Cliente acepta que cualquier reembolso solo es válido dentro de los próximos 5 (Cinco) días naturales después de haber pagado la cotización.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'El Cliente entiende que cada artículo es hecho a medida y, una vez iniciado el trabajo, no se permitirán cambios, cancelaciones ni devoluciones.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'El Cliente entiende y reconoce que los precios mostrados en esta cotización son una estimación y pueden variar durante el proceso de selección hasta el proyecto final, de acuerdo con las elecciones del cliente.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.Text(
+                              'El Cliente será notificado de cualquier cambio en el costo antes de que se incurra en ellos.',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.SizedBox(height: 16),
+                          pw.Text('INFORMACIÓN DE PAGO:',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                              )),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'CUENTA EN PESOS MEXICANO',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Banco del eneficiario: SANTANDER (MÉXICO) S.A.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Dirección del banco: 0302 CABO SAN LUCAS',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Código swift: BMSXMXMMXXX',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiario: RANCHO REAL ESTATE, S.A. DE C.V.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Cuenta del beneficiairo: 014041655053161121',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'CUENTA EN DOLARES AMERICANOS',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Banco del beneficiario: CITI COMMERCIAL BANK',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Dirección del banco: #653 740 LOMAS SANTA FE DR. SOLANA BEACH, CALIFORNIA. ZIP. 92075',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'ABA: 322 271 724',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Código swift: CITIUS33',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Beneficiario: RANCHO REAL ESTATE, S.A. DE C.V.',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Text(
+                            'Cuenta del beneficiario: 207849431',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'FIRMA DE ACEPTACIÓN',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Image(
+                            image,
+                            width: 45,
+                            height: 45,
+                          ),
+                          pw.Container(
+                            width: 180,
+                            height: 1.5,
+                            color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                          ),
+                          pw.Text(
+                            widget.configData!['nombre_cliente'],
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          pw.Text(
+                            'FIRMADO Y ACEPTADO EL',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.SizedBox(height: 6),
+                          pw.Text(
+                            DateFormat('MM/dd/yyyy').format(DateTime.now()),
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                          pw.Container(
+                            width: 180,
+                            height: 1.5,
+                            color: PdfColor(210 / 255, 210 / 255, 220 / 255),
+                          ),
+                          pw.Text(
+                            'Fecha de aceptación',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+              ],
+            )));
 
     if (kIsWeb) {
       // Manejo específico para la web
@@ -534,7 +880,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
         // Ruta de la carpeta Docs
         var docsDirectory = Directory('/storage/emulated/0/Documents');
 
-        final diamanteDirectory = Directory('${docsDirectory.path}/Diamante');
+        final diamanteDirectory = Directory('${docsDirectory.path}/RanchoSL');
 
         if(!diamanteDirectory.existsSync()){
           diamanteDirectory.createSync(recursive: true);

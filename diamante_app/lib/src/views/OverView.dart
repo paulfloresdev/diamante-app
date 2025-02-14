@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/WebDatabaseService.dart';
 import '../models/auxiliars/Router.dart';
@@ -28,10 +29,20 @@ class _OverViewState extends State<OverView> {
   late Future<Map<String, dynamic>?> _futureConfig;
   late bool isOpen;
 
+  String language = 'en'; // Asignar un valor predeterminado para evitar errores
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getLanguage();
     webDatabaseService = kIsWeb ?
         Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
@@ -58,9 +69,9 @@ class _OverViewState extends State<OverView> {
             return ConfirmDialog(
               title: title,
               subTitle: subTitle,
-              confirmLabel: 'Aceptar',
+              confirmLabel: language == 'en' ? 'Accept' : 'Aceptar',
               confirmColor: Colors.redAccent.shade700,
-              declineLabel: 'Cancelar',
+              declineLabel: language == 'en' ? 'Cancel' : 'Cancelar',
               declineColor: Colors.grey.shade700,
             );
           },
@@ -84,7 +95,7 @@ class _OverViewState extends State<OverView> {
                   builder: (context,
                       AsyncSnapshot<Map<String, dynamic>?> configData) {
                     if (!configData.hasData) {
-                      return Center(child: Text('Cargando...'));
+                      return Center(child: Text(language == 'en' ? 'Loading...' : 'Cargando...'));
                     }
 
                     var configsD = configData.data;
@@ -104,7 +115,9 @@ class _OverViewState extends State<OverView> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Cliente:',
+                                        language == 'en'
+                                            ? 'Client:'
+                                            : 'Cliente:',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -128,7 +141,7 @@ class _OverViewState extends State<OverView> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Fecha',
+                                        language == 'en' ? 'Date:' : 'Fecha',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -153,7 +166,9 @@ class _OverViewState extends State<OverView> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Folio:',
+                                        language == 'en'
+                                            ? 'Record number:'
+                                            : 'Folio:',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -163,7 +178,9 @@ class _OverViewState extends State<OverView> {
                                       ),
                                       SizedBox(width: 0.5 * vw),
                                       Text(
-                                        'Por definir',
+                                        language == 'en'
+                                            ? 'Undefined'
+                                            : 'Por definir',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -177,7 +194,9 @@ class _OverViewState extends State<OverView> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Moneda:',
+                                        language == 'en'
+                                            ? 'Currency:'
+                                            : 'Moneda:',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -201,7 +220,9 @@ class _OverViewState extends State<OverView> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Empresa:',
+                                        language == 'en'
+                                            ? 'Company:'
+                                            : 'Empresa:',
                                         textAlign: TextAlign.end,
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
@@ -233,7 +254,9 @@ class _OverViewState extends State<OverView> {
                                       child: Row(
                                         children: [
                                           Text(
-                                            'Cotización detallada:',
+                                            language == 'en'
+                                                ? 'Detailed quotation:'
+                                                : 'Cotización detallada:',
                                             textAlign: TextAlign.end,
                                             style: TextStyle(
                                               color: Theme.of(context)
@@ -280,7 +303,7 @@ class _OverViewState extends State<OverView> {
                                     ),
                                   ),
                                   Text(
-                                    'C.P. ${configs['cp']}',
+                                    '${language == 'en' ? 'ZIP.' : 'C.P.'} ${configs['cp']}',
                                     textAlign: TextAlign.end,
                                     style: TextStyle(
                                       color: Theme.of(context).primaryColor,
@@ -313,8 +336,12 @@ class _OverViewState extends State<OverView> {
                             child: Center(
                               child: Text(
                                 isOpen
-                                    ? 'DETALLE DE LA COTIZACIÓN'
-                                    : 'RESUMEN DE LA COTIZACIÓN',
+                                    ? language == 'en'
+                                        ? 'QUOTE DETAILS'
+                                        : 'DETALLE DE LA COTIZACIÓN'
+                                    : language == 'en'
+                                        ? 'QUOTE SUMMARY'
+                                        : 'RESUMEN DE LA COTIZACIÓN',
                                 style: TextStyle(
                                   fontSize: 1.4 * vw,
                                   fontWeight: FontWeight.w600,
@@ -327,7 +354,9 @@ class _OverViewState extends State<OverView> {
                           builder: (context,
                               AsyncSnapshot<Map<String, dynamic>> snapshot) {
                             if (!snapshot.hasData) {
-                              return Center(child: Text('Cargando...'));
+                              return Center(child: Text(language == 'en'
+                                      ? 'Loading...'
+                                      : 'Cargando...'));
                             }
                             var data = snapshot.data;
                             var subtotal = data!['totalSum'];
@@ -337,7 +366,9 @@ class _OverViewState extends State<OverView> {
                             var groups = data['grupos'];
                             if (groups!.isEmpty) {
                               return Center(
-                                  child: Text('No se han agregado productos.'));
+                                  child: Text(language == 'en'
+                                      ? 'There isn´t added products.'
+                                      : 'No se han agregado productos.'));
                             }
 
                             return Column(
@@ -410,7 +441,7 @@ class _OverViewState extends State<OverView> {
                                                     child: Row(
                                                       children: [
                                                         Cell(
-                                                            text: 'Concepto',
+                                                            text: language == 'en' ? 'Description' : 'Concepto',
                                                             width: 42.5 * vw,
                                                             fontWeight:
                                                                 FontWeight.w600,
@@ -419,26 +450,26 @@ class _OverViewState extends State<OverView> {
                                                                     .start),
                                                         Cell(
                                                           text:
-                                                              'Tipo de unidad',
+                                                              language == 'en' ? 'Unit type' : 'Tipo de unidad',
                                                           width: 20 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
                                                           text:
-                                                              'Precio unitario',
+                                                              language == 'en' ? 'Unit price' : 'Precio unitario',
                                                           width: 12.25 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
-                                                          text: 'Cantidad',
+                                                          text: language == 'en' ? 'Amount' : 'Cantidad',
                                                           width: 8 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
-                                                          text: 'Importe total',
+                                                          text: language == 'en' ? 'Total' : 'Importe total',
                                                           width: 12.25 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
@@ -474,9 +505,15 @@ class _OverViewState extends State<OverView> {
                                                                   confirmDelete =
                                                                   await _showConfirmationDialog(
                                                                       title:
-                                                                          'Eliminar producto de la cotización',
+                                                                          language ==
+                                                                          'en'
+                                                                      ? 'Remove product from the quote'
+                                                                      : 'Eliminar producto de la cotización',
                                                                       subTitle:
-                                                                          'Este producto será eliminado unicamente de la cotización, podrás encontrarlo nuevamente en su respectiva propuesta.');
+                                                                          language ==
+                                                                          'en'
+                                                                      ? 'This product will only be removed from the quotation; you can find it again in its respective proposal.'
+                                                                      : 'Este producto será eliminado unicamente de la cotización, podrás encontrarlo nuevamente en su respectiva propuesta.');
 
                                                               if (confirmDelete) {
                                                                 await DatabaseService
@@ -490,7 +527,10 @@ class _OverViewState extends State<OverView> {
                                                                         context:
                                                                             context)
                                                                     .show(
-                                                                        'Producto eliminado de la cotización correctamente.');
+                                                                        language ==
+                                                                            'en'
+                                                                        ? 'Product removed from quote successfully.'
+                                                                        : 'Producto eliminado de la cotización correctamente.');
                                                               }
                                                             },
                                                             splashColor: Theme
@@ -721,7 +761,9 @@ class _OverViewState extends State<OverView> {
                                           //  RESUMEN
                                           contentTable.add({
                                             'type': 'header',
-                                            'label': 'RESUMEN DE LA COTIZACIÓN'
+                                            'label': language == 'en'
+                                                ? 'QUOTE SUMMARY'
+                                                : 'RESUMEN DE LA COTIZACIÓN'
                                           });
 
                                           for (int i = 0;
@@ -760,7 +802,9 @@ class _OverViewState extends State<OverView> {
                                           //  DETALLE
                                           contentTable.add({
                                             'type': 'header',
-                                            'label': 'DETALLE DE LA COTIZACIÓN'
+                                            'label': language == 'en'
+                                                ? 'QUOTE DETAILS'
+                                                : 'DETALLE DE LA COTIZACIÓN'
                                           });
 
                                           for (int i = 0;
@@ -836,7 +880,9 @@ class _OverViewState extends State<OverView> {
                                               color: Colors.transparent),
                                           child: Center(
                                             child: Text(
-                                              'Aceptar y firmar',
+                                              language == 'en'
+                                                  ? 'Confirm and sign'
+                                                  : 'Aceptar y firmar',
                                               style: TextStyle(
                                                 fontSize: 1.2 * vw,
                                                 color: Theme.of(context)

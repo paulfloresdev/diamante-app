@@ -24,6 +24,7 @@ void main() async {
       // Insertar datos de prueba
       await webDatabaseService.insertTestValue();
       await prefs.setBool('isFirstRun', false);
+      await prefs.setString('language', 'en');
     }
 
     var values = await webDatabaseService.getTestValues();

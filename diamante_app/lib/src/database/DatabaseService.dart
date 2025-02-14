@@ -90,7 +90,7 @@ class DatabaseService {
       'nombre_cliente': 'Cliente Predeterminado',
       'moneda': 'MXN',
       'iva_porcentaje': 16.0, // IVA predeterminado
-      'nombre_empresa': 'Diamante Cabo San Lucas, S. de R.L. de C.V.',
+      'nombre_empresa': 'Rancho San Lucas',
       'domicilio':
           'Cabo San Lucas, Baja California Sur, México.', // Valor para domicilio
       'cp': '12345', // Valor para código postal

@@ -108,7 +108,7 @@ class _CustomscaffoldState extends State<Customscaffold> {
               children: [
                 Image.asset('assets/images/logo.png',
                     color: Theme.of(context).secondaryHeaderColor,
-                    width: 7.5 * vw),
+                    width: 5 * vw),
                 SizedBox(width: 1.25 * vw),
                 widget.groupId == 0 ? CircularButton(
                   onPressed: () async {

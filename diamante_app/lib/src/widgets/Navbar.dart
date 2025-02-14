@@ -3,6 +3,7 @@ import 'package:diamante_app/src/views/GroupView.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/DatabaseService.dart';
 import '../database/WebDatabaseService.dart';
@@ -27,10 +28,20 @@ class _NavbarState extends State<Navbar> {
   final TextEditingController _addGroupController = TextEditingController();
   late Future<List<Map<String, dynamic>>> _futureGroups;
 
+  String language = 'en';
+
+  getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      language = prefs.getString('language') ?? 'en';
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getLanguage();
     webDatabaseService = kIsWeb ? 
         Provider.of<WebDatabaseService>(context, listen: false) : null;
     _reload();
@@ -56,7 +67,9 @@ class _NavbarState extends State<Navbar> {
         await DatabaseService.instance.createGrupo(groupName);
       }
 
-      CustomSnackBar(context: context).show('Grupo creado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Group created successfully.'
+          : 'Grupo creado correctamente.');
       setState(() {
         // Actualiza la lista de grupos después de agregar uno
         _reload();
@@ -65,7 +78,9 @@ class _NavbarState extends State<Navbar> {
       Navigator.of(context).pop(); // Cierra el diálogo
     } else {
       CustomSnackBar(context: context)
-          .show('El nombre del grupo no puede estar vacío.');
+          .show(language == 'en'
+          ? 'Group name can´t be empty.'
+          : 'El nombre del grupo no puede estar vacío.');
     }
   }
 
@@ -74,11 +89,11 @@ class _NavbarState extends State<Navbar> {
       context: context,
       builder: (context) {
         return SingleInputDialog(
-          title: 'Nuevo grupo',
+          title: language == 'en' ? 'New group' : 'Nuevo grupo',
           inputController: _addGroupController,
-          inputHint: 'Nombre',
+          inputHint: language == 'en' ? 'Name' : 'Nombre',
           onConfirm: addGroup,
-          confirmLabel: 'Guardar',
+          confirmLabel: language == 'en' ? 'Save' : 'Guardar',
         );
       },
     );
@@ -92,12 +107,16 @@ class _NavbarState extends State<Navbar> {
         await DatabaseService.instance.updateGrupo(groupId, newGroupName);
       }
 
-      CustomSnackBar(context: context).show('Grupo actualizado correctamente.');
+      CustomSnackBar(context: context).show(language == 'en'
+          ? 'Group updated successfully.'
+          : 'Grupo actualizado correctamente.');
       _reload(); // Recarga los grupos.
       Navigator.of(context).pop(); // Cierra el diálogo.
     } else {
       CustomSnackBar(context: context)
-          .show('El nombre del grupo no puede estar vacío.');
+          .show(language == 'en'
+          ? 'Group name can´t be empty.'
+          : 'El nombre del grupo no puede estar vacío.');
     }
   }
 
@@ -109,12 +128,12 @@ class _NavbarState extends State<Navbar> {
       context: context,
       builder: (context) {
         return SingleInputDialog(
-          title: 'Editar grupo',
+          title: language == 'en' ? 'Update group' : 'Editar grupo',
           inputController: editController,
-          inputHint: 'Nombre',
+          inputHint: language == 'en' ? 'Name' : 'Nombre',
           inputValue: currentName,
           onConfirm: () => editGroup(editController.text.trim(), groupId),
-          confirmLabel: 'Guardar',
+          confirmLabel: language == 'en' ? 'Save' : 'Guardar',
           onDecline: () async {
             late var hasSelectedProducts;
             if (kIsWeb) {
@@ -127,7 +146,9 @@ class _NavbarState extends State<Navbar> {
 
             if (hasSelectedProducts) {
               CustomSnackBar(context: context).show(
-                  'No es posible eliminar este grupo ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
+                  language == 'en'
+                  ? 'It is not possible to delete this group as it contains selected products. You can remove these products from your selection in the \'Quotation\' tab.'
+                  : 'No es posible eliminar este grupo ya que contiene productos seleccionados, puedes eliminar de tu selección estos productos en la pestaña \'Cotización\'');
             } else {
               final bool confirmDelete = await _showDeleteConfirmationDialog();
 
@@ -139,7 +160,9 @@ class _NavbarState extends State<Navbar> {
                 }
 
                 CustomSnackBar(context: context)
-                    .show('Grupo eliminado correctamente.');
+                    .show(language == 'en'
+                    ? 'Group deleted successfully.'
+                    : 'Grupo eliminado correctamente.');
 
                 // Cierra el diálogo inmediatamente
                 Navigator.of(context).pop();
@@ -164,7 +187,7 @@ class _NavbarState extends State<Navbar> {
               }
             }
           },
-          declineLabel: 'Eliminar',
+          declineLabel: language == 'en' ? 'Delete' : 'Eliminar',
         );
       },
     );
@@ -175,12 +198,14 @@ class _NavbarState extends State<Navbar> {
           context: context,
           builder: (BuildContext context) {
             return ConfirmDialog(
-              title: 'Confirmar Eliminación',
+              title: language == 'en' ? 'Confirm Delete' : 'Confirmar Eliminación',
               subTitle:
-                  '¿Estás seguro de que deseas eliminar este grupo?\nTodos los datos contenidos en él también se perderán.',
-              confirmLabel: 'Eliminar',
+                  language == 'en'
+                  ? 'Are you sure you want to delete this group?\nAll data will be deleted as well.'
+                  : '¿Estás seguro de que deseas eliminar este grupo?\nTodos los datos contenidos en él también se perderán.',
+              confirmLabel: language == 'en' ? 'Delete' : 'Eliminar',
               confirmColor: Colors.redAccent.shade700,
-              declineLabel: 'Cancelar',
+              declineLabel: language == 'en' ? 'Cancel' : 'Cancelar',
               declineColor: Colors.grey.shade700,
             );
           },
@@ -210,7 +235,7 @@ class _NavbarState extends State<Navbar> {
                 isFocused: false,
               ),
               BoxButton(
-                label: 'Cotización',
+                label: language == 'en' ? 'Quotation' : 'Cotización',
                 width: 8.5 * vw,
                 onPressed: () => Routes(context).goTo(OverView()),
                 isFocused: widget.groupId == 0,
@@ -224,7 +249,9 @@ class _NavbarState extends State<Navbar> {
                     builder: (context,
                         AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                       if (!snapshot.hasData) {
-                        return Center(child: Text('Cargando...'));
+                        return Center(child: Text(language == 'en'
+                                ? 'Loading...'
+                                : 'Cargando...'));
                       }
                       var groups = snapshot.data;
                       if (groups!.isEmpty) {
