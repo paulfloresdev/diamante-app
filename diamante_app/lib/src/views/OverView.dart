@@ -444,7 +444,7 @@ class _OverViewState extends State<OverView> {
                                                     child: Row(
                                                       children: [
                                                         Cell(
-                                                            text: 'Concepto',
+                                                            text: language == 'en' ? 'Description' : 'Concepto',
                                                             width: 42.5 * vw,
                                                             fontWeight:
                                                                 FontWeight.w600,
@@ -453,26 +453,26 @@ class _OverViewState extends State<OverView> {
                                                                     .start),
                                                         Cell(
                                                           text:
-                                                              'Tipo de unidad',
+                                                              language == 'en' ? 'Unit type' : 'Tipo de unidad',
                                                           width: 20 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
                                                           text:
-                                                              'Precio unitario',
+                                                              language == 'en' ? 'Unit price' : 'Precio unitario',
                                                           width: 12.25 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
-                                                          text: 'Cantidad',
+                                                          text: language == 'en' ? 'Amount' : 'Cantidad',
                                                           width: 8 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                         ),
                                                         Cell(
-                                                          text: 'Importe total',
+                                                          text: language == 'en' ? 'Total' : 'Importe total',
                                                           width: 12.25 * vw,
                                                           fontWeight:
                                                               FontWeight.w600,

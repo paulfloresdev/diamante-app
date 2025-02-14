@@ -1,4 +1,5 @@
 import 'package:diamante_app/src/database/DatabaseService.dart';
+import 'package:diamante_app/src/models/auxiliars/Router.dart';
 import 'package:diamante_app/src/widgets/Buttons/BoxButton.dart';
 import 'package:diamante_app/src/widgets/CustomScaffold.dart';
 import 'package:diamante_app/src/widgets/Input.dart';
@@ -60,6 +61,9 @@ class _ConfigsViewState extends State<ConfigsView> {
       prefs.setString('language', language == 'en' ? 'es' : 'en');
       language = prefs.getString('language') ?? 'en';
     });
+    Routes(context).goTo(
+      ConfigsView(nombreCliente: widget.nombreCliente, moneda: widget.moneda, ivaPorcentaje: widget.ivaPorcentaje, nombreEmpresa: widget.nombreEmpresa, domicilio: widget.domicilio, cp: widget.cp, telefono: widget.telefono)
+    );
   }
 
   @override
