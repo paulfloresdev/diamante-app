@@ -921,7 +921,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
             CircularButton(
                 onPressed: () => Routes(context).goTo(OverView()),
                 icon: Icons.arrow_back),
-            Text("Captura de firma"),
+            Text(language == 'en' ? 'Signature capture' : "Captura de firma"),
           ],
         ),
       ),
@@ -949,7 +949,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                   color: Theme.of(context).primaryColor,
                   child: Center(
                     child: Text(
-                      'Limpiar',
+                      language == 'en' ? 'Clear' : 'Limpiar',
                       style: TextStyle(
                         fontSize: 1.2 * vw,
                         fontWeight: FontWeight.w400,
@@ -966,13 +966,13 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                     final signature = await _signatureController.toPngBytes();
                     if (signature != null) {
                       CustomSnackBar(context: context)
-                          .show('Generando archivo...');
+                          .show(language == 'en' ? 'Generating file...' : 'Generando archivo...');
 
                       await generateAndSharePdf(signature);
                     }
                   } else {
                     CustomSnackBar(context: context)
-                        .show('Por favor firma antes de continuar');
+                        .show(language == 'en' ? 'Please sign before continuing.' : 'Por favor firma antes de continuar.');
                   }
                 },
                 child: Container(
@@ -982,7 +982,7 @@ class _PdfWithSignatureState extends State<PdfWithSignature> {
                   color: Theme.of(context).primaryColor,
                   child: Center(
                     child: Text(
-                      'Firmar cotización',
+                      language == 'en' ? 'Sign quotation' : 'Firmar cotización',
                       style: TextStyle(
                         fontSize: 1.2 * vw,
                         fontWeight: FontWeight.w400,
